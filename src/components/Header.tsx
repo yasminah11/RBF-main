@@ -122,13 +122,13 @@ export function Header() {
             </button>
             
             <div className="flex items-center gap-1.5 sm:gap-4">
-              {/* Search Toggle - Visible on all devices */}
+              {/* Search Toggle - Visible only on desktop, moved to menu for mobile */}
               <button 
                 onClick={() => setShowSearch(true)}
-                className="flex text-foreground hover:text-primary hover:scale-105 transition-all duration-300 p-1.5" 
+                className="hidden lg:flex text-foreground hover:text-primary hover:scale-105 transition-all duration-300 p-1.5" 
                 aria-label={t.common.search}
               >
-                <Search className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                <Search className="h-3.5 w-3.5" />
               </button>
 
               {/* Language Switcher - Always visible in main navbar */}
