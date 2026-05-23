@@ -66,7 +66,9 @@ function generateSKU(productSku: string, suffix?: string): string {
   return suffix ? `${base}-${suffix}-${timestamp}` : `${base}-${timestamp}`;
 }
 
-const SCAN_BASE_URL = window.location.origin;
+const SCAN_BASE_URL = (
+  import.meta.env.VITE_APP_URL || window.location.origin
+).replace(/\/+$/, "");
 
 function generateQRUrl(sku: string): string {
   return `${SCAN_BASE_URL}/scan?sku=${encodeURIComponent(sku)}`;

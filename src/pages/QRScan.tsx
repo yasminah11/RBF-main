@@ -21,7 +21,6 @@ export default function QRScan() {
 
   useEffect(() => {
     const process = async () => {
-      // Support both ?sku=XXX and raw JSON in ?data=
       let sku = searchParams.get("sku");
       const rawData = searchParams.get("data");
 
