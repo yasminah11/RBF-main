@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Globe,
   CreditCard,
   Mail,
-  Phone,
-  MapPin,
   FileText,
   HelpCircle,
   RotateCcw,
@@ -12,6 +10,9 @@ import {
   Plus,
   Trash2,
   Loader2,
+  Image,
+  Video,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-type Tab = "general" | "contact" | "about" | "faq" | "returns";
+type Tab = "general" | "contact" | "about" | "faq" | "returns" | "header";
 
 async function loadSetting(id: string) {
   const { data } = await supabase
@@ -45,18 +46,20 @@ export function AdminSettings() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
 
-  // General state
+  // General
   const [general, setGeneral] = useState({
     brand_name_en: "",
     brand_name_ar: "",
     brand_name_tr: "",
     logo_url: "",
+    footer_logo_url: "",
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [footerLogoFile, setFooterLogoFile] = useState<File | null>(null);
+  const [footerLogoPreview, setFooterLogoPreview] = useState<string>("");
 
-  // Contact state
+  // Contact
   const [contact, setContact] = useState({
     email: "",
     phone: "",
@@ -66,10 +69,10 @@ export function AdminSettings() {
     whatsapp: "",
   });
 
-  // About state
+  // About
   const [about, setAbout] = useState({ en: "", ar: "", tr: "" });
 
-  // FAQ state
+  // FAQ
   const [faqItems, setFaqItems] = useState<
     {
       q_en: string;
@@ -81,7 +84,7 @@ export function AdminSettings() {
     }[]
   >([]);
 
-  // Returns state
+  // Returns
   const [returns, setReturns] = useState({
     en: {
       policy: "",
@@ -105,8 +108,16 @@ export function AdminSettings() {
       refund: "",
     },
   });
-
   const [returnsLang, setReturnsLang] = useState<"en" | "ar" | "tr">("en");
+
+  // Header Media
+  const [headerMedia, setHeaderMedia] = useState<{
+    type: "image" | "slideshow" | "video";
+    images: string[];
+    video_url: string;
+    interval: number;
+  }>({ type: "image", images: [""], video_url: "", interval: 3 });
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   useEffect(() => {
     if (activeTab === "general")
@@ -114,6 +125,7 @@ export function AdminSettings() {
         if (d) {
           setGeneral(d);
           setLogoPreview(d.logo_url || "");
+          setFooterLogoPreview(d.footer_logo_url || "");
         }
       });
     if (activeTab === "contact")
@@ -124,54 +136,166 @@ export function AdminSettings() {
       loadSetting("faq").then((d) => d?.items && setFaqItems(d.items));
     if (activeTab === "returns")
       loadSetting("returns").then((d) => d && setReturns(d));
+    if (activeTab === "header")
+      loadSetting("header_media").then((d) => {
+        if (d) setHeaderMedia(d);
+      });
   }, [activeTab]);
+
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    const { error } = await supabase.storage
+      .from("site-assets")
+      .upload(path, file, { upsert: true });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+    return data.publicUrl;
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       if (activeTab === "general") {
         let logo_url = general.logo_url;
+        let footer_logo_url = general.footer_logo_url;
 
         if (logoFile) {
-          setUploadingLogo(true);
           const ext = logoFile.name.split(".").pop();
-          const path = `logos/brand-logo.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from("site-assets")
-            .upload(path, logoFile, { upsert: true });
-          if (uploadError) throw new Error(uploadError.message);
-          const { data: urlData } = supabase.storage
-            .from("site-assets")
-            .getPublicUrl(path);
-          logo_url = urlData.publicUrl;
-          setUploadingLogo(false);
+          logo_url = await uploadFile(logoFile, `logos/brand-logo.${ext}`);
+          setLogoFile(null);
         }
-
-        await saveSetting("general", { ...general, logo_url });
-        setGeneral((prev) => ({ ...prev, logo_url }));
+        if (footerLogoFile) {
+          const ext = footerLogoFile.name.split(".").pop();
+          footer_logo_url = await uploadFile(
+            footerLogoFile,
+            `logos/footer-logo.${ext}`,
+          );
+          setFooterLogoFile(null);
+        }
+        await saveSetting("general", { ...general, logo_url, footer_logo_url });
+        setGeneral((prev) => ({ ...prev, logo_url, footer_logo_url }));
         setLogoPreview(logo_url);
-        setLogoFile(null);
+        setFooterLogoPreview(footer_logo_url);
       }
       if (activeTab === "contact") await saveSetting("contact", contact);
       if (activeTab === "about") await saveSetting("about", about);
       if (activeTab === "faq") await saveSetting("faq", { items: faqItems });
       if (activeTab === "returns") await saveSetting("returns", returns);
+      if (activeTab === "header")
+        await saveSetting("header_media", headerMedia);
+
       toast.success("Saved successfully!");
     } catch (err: any) {
       toast.error("Save failed: " + err.message);
     } finally {
       setSaving(false);
-      setUploadingLogo(false);
+    }
+  };
+
+  const handleMediaImageUpload = async (file: File, index: number) => {
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const url = await uploadFile(file, `header/image-${Date.now()}.${ext}`);
+      const newImages = [...headerMedia.images];
+      newImages[index] = url;
+      setHeaderMedia({ ...headerMedia, images: newImages });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  const handleVideoUpload = async (file: File) => {
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const url = await uploadFile(file, `header/video-${Date.now()}.${ext}`);
+      setHeaderMedia({ ...headerMedia, video_url: url });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploadingMedia(false);
     }
   };
 
   const tabs = [
     { id: "general", label: "General", icon: Globe },
+    { id: "header", label: "Header Media", icon: Monitor },
     { id: "contact", label: "Contact", icon: Mail },
     { id: "about", label: "About", icon: FileText },
     { id: "faq", label: "FAQ", icon: HelpCircle },
     { id: "returns", label: "Returns", icon: RotateCcw },
   ] as const;
+
+  const LogoSection = ({
+    title,
+    preview,
+    onFile,
+    onUrl,
+    urlValue,
+    onRemove,
+    previewAlt,
+  }: {
+    title: string;
+    preview: string;
+    onFile: (f: File) => void;
+    onUrl: (url: string) => void;
+    urlValue: string;
+    onRemove: () => void;
+    previewAlt: string;
+  }) => (
+    <Card className="bg-card border-border p-6 space-y-4">
+      <h2 className="text-xs uppercase tracking-widest font-bold text-primary flex items-center gap-2">
+        <CreditCard className="h-4 w-4" /> {title}
+      </h2>
+      {preview && (
+        <div className="flex items-center gap-4">
+          <img
+            src={preview}
+            alt={previewAlt}
+            className="h-16 w-auto object-contain border border-border rounded p-2 bg-background"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRemove}
+            className="text-destructive text-xs"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
+          </Button>
+        </div>
+      )}
+      <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+          Upload Logo
+        </Label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+          }}
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-xs file:uppercase file:tracking-widest file:font-bold file:bg-card file:text-primary hover:file:bg-primary hover:file:text-primary-foreground file:cursor-pointer file:transition-all"
+        />
+        <p className="text-[10px] text-muted-foreground">
+          PNG, JPG, SVG — recommended 200×60px
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+          Or Paste URL
+        </Label>
+        <Input
+          value={urlValue}
+          onChange={(e) => onUrl(e.target.value)}
+          placeholder="https://..."
+          className="bg-background border-border"
+        />
+      </div>
+    </Card>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -182,7 +306,6 @@ export function AdminSettings() {
         </p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 flex-wrap border-b border-border pb-2">
         {tabs.map((tab) => (
           <button
@@ -204,7 +327,6 @@ export function AdminSettings() {
       {/* General Tab */}
       {activeTab === "general" && (
         <div className="space-y-6">
-          {/* Brand Name */}
           <Card className="bg-card border-border p-6 space-y-4">
             <h2 className="text-xs uppercase tracking-widest font-bold text-primary flex items-center gap-2">
               <Globe className="h-4 w-4" /> Brand Name
@@ -231,92 +353,303 @@ export function AdminSettings() {
                     }
                     dir={lang === "ar" ? "rtl" : "ltr"}
                     className="bg-background border-border"
-                    placeholder={
-                      lang === "en"
-                        ? "Royal Brands Fashion"
-                        : lang === "ar"
-                          ? "رويال براندز فاشن"
-                          : "Royal Brands Fashion"
-                    }
                   />
                 </div>
               ))}
             </div>
           </Card>
 
-          {/* Logo */}
+          {/* Navbar Logo */}
+          <LogoSection
+            title="Navbar Logo"
+            preview={logoPreview}
+            previewAlt="Navbar Logo"
+            urlValue={general.logo_url}
+            onFile={(f) => {
+              setLogoFile(f);
+              setLogoPreview(URL.createObjectURL(f));
+            }}
+            onUrl={(url) => {
+              setGeneral({ ...general, logo_url: url });
+              setLogoPreview(url);
+              setLogoFile(null);
+            }}
+            onRemove={() => {
+              setLogoPreview("");
+              setLogoFile(null);
+              setGeneral({ ...general, logo_url: "" });
+            }}
+          />
+
+          {/* Footer Logo */}
+          <LogoSection
+            title="Footer Logo"
+            preview={footerLogoPreview}
+            previewAlt="Footer Logo"
+            urlValue={general.footer_logo_url}
+            onFile={(f) => {
+              setFooterLogoFile(f);
+              setFooterLogoPreview(URL.createObjectURL(f));
+            }}
+            onUrl={(url) => {
+              setGeneral({ ...general, footer_logo_url: url });
+              setFooterLogoPreview(url);
+              setFooterLogoFile(null);
+            }}
+            onRemove={() => {
+              setFooterLogoPreview("");
+              setFooterLogoFile(null);
+              setGeneral({ ...general, footer_logo_url: "" });
+            }}
+          />
+        </div>
+      )}
+
+      {/* Header Media Tab */}
+      {activeTab === "header" && (
+        <div className="space-y-6">
+          {/* Type Selector */}
           <Card className="bg-card border-border p-6 space-y-4">
             <h2 className="text-xs uppercase tracking-widest font-bold text-primary flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> Brand Logo
+              <Monitor className="h-4 w-4" /> Header Display Type
             </h2>
-
-            {/* Preview */}
-            {logoPreview && (
-              <div className="flex items-center gap-4">
-                <img
-                  src={logoPreview}
-                  alt="Brand Logo"
-                  className="h-16 w-auto object-contain border border-border rounded p-2 bg-background"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setLogoPreview("");
-                    setLogoFile(null);
-                    setGeneral({ ...general, logo_url: "" });
-                  }}
-                  className="text-destructive text-xs"
+            <div className="flex gap-3">
+              {(
+                [
+                  { id: "image", label: "Single Image", icon: Image },
+                  { id: "slideshow", label: "Slideshow (3s)", icon: Image },
+                  { id: "video", label: "Video", icon: Video },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() =>
+                    setHeaderMedia({ ...headerMedia, type: opt.id })
+                  }
+                  className={cn(
+                    "flex-1 py-3 px-4 text-[10px] uppercase tracking-widest font-bold rounded border transition-all flex flex-col items-center gap-2",
+                    headerMedia.type === opt.id
+                      ? "bg-primary/20 text-primary border-primary/30"
+                      : "border-border text-muted-foreground hover:border-primary/30",
+                  )}
                 >
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
-                </Button>
-              </div>
-            )}
-
-            {/* Upload */}
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Upload New Logo
-              </Label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setLogoFile(file);
-                  setLogoPreview(URL.createObjectURL(file));
-                }}
-                className="block w-full text-sm text-muted-foreground
-                  file:mr-4 file:py-2 file:px-4
-                  file:border file:border-border
-                  file:text-xs file:uppercase file:tracking-widest file:font-bold
-                  file:bg-card file:text-primary
-                  hover:file:bg-primary hover:file:text-primary-foreground
-                  file:cursor-pointer file:transition-all"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                PNG, JPG, SVG — recommended 200×60px
-              </p>
-            </div>
-
-            {/* Or paste URL */}
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Or Paste Logo URL
-              </Label>
-              <Input
-                value={general.logo_url}
-                onChange={(e) => {
-                  setGeneral({ ...general, logo_url: e.target.value });
-                  setLogoPreview(e.target.value);
-                  setLogoFile(null);
-                }}
-                placeholder="https://..."
-                className="bg-background border-border"
-              />
+                  <opt.icon className="h-5 w-5" />
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </Card>
+
+          {/* Single Image or Slideshow */}
+          {(headerMedia.type === "image" ||
+            headerMedia.type === "slideshow") && (
+            <Card className="bg-card border-border p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs uppercase tracking-widest font-bold text-primary">
+                  {headerMedia.type === "slideshow"
+                    ? "Slideshow Images"
+                    : "Header Image"}
+                </h2>
+                {headerMedia.type === "slideshow" && (
+                  <Button
+                    onClick={() =>
+                      setHeaderMedia({
+                        ...headerMedia,
+                        images: [...headerMedia.images, ""],
+                      })
+                    }
+                    size="sm"
+                    variant="outline"
+                    className="text-xs gap-1 border-border"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Image
+                  </Button>
+                )}
+              </div>
+
+              {headerMedia.type === "slideshow" && (
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Interval (seconds)
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    {[2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() =>
+                          setHeaderMedia({ ...headerMedia, interval: s })
+                        }
+                        className={cn(
+                          "h-9 w-12 rounded border text-sm font-bold transition-all",
+                          headerMedia.interval === s
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border text-muted-foreground hover:border-primary",
+                        )}
+                      >
+                        {s}s
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {(headerMedia.type === "image"
+                  ? [headerMedia.images[0]]
+                  : headerMedia.images
+                ).map((img, i) => (
+                  <div key={i} className="space-y-3">
+                    {headerMedia.type === "slideshow" && (
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Image {i + 1}
+                        </Label>
+                        {headerMedia.images.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const imgs = headerMedia.images.filter(
+                                (_, idx) => idx !== i,
+                              );
+                              setHeaderMedia({ ...headerMedia, images: imgs });
+                            }}
+                            className="text-destructive hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {img && (
+                      <div className="relative rounded-lg overflow-hidden h-32 bg-muted/20 border border-border group/img">
+                        <img
+                          src={img}
+                          alt={`Header ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={() => {
+                            const imgs = [...headerMedia.images];
+                            imgs[i] = "";
+                            setHeaderMedia({ ...headerMedia, images: imgs });
+                          }}
+                          className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border rounded p-1.5 text-destructive hover:bg-destructive hover:text-white transition-all opacity-0 group-hover/img:opacity-100"
+                          title="Remove image"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">
+                          Upload File
+                        </Label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleMediaImageUpload(f, i);
+                          }}
+                          className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:border file:border-border file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-card file:text-primary hover:file:bg-primary hover:file:text-primary-foreground file:cursor-pointer file:transition-all"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">
+                          Or Paste URL
+                        </Label>
+                        <Input
+                          value={img || ""}
+                          onChange={(e) => {
+                            const imgs = [...headerMedia.images];
+                            imgs[i] = e.target.value;
+                            setHeaderMedia({ ...headerMedia, images: imgs });
+                          }}
+                          placeholder="https://..."
+                          className="bg-background border-border text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {uploadingMedia && (
+                <p className="text-xs text-primary animate-pulse">
+                  Uploading...
+                </p>
+              )}
+            </Card>
+          )}
+
+          {/* Video */}
+          {headerMedia.type === "video" && (
+            <Card className="bg-card border-border p-6 space-y-4">
+              <h2 className="text-xs uppercase tracking-widest font-bold text-primary flex items-center gap-2">
+                <Video className="h-4 w-4" /> Header Video
+              </h2>
+              {headerMedia.video_url && (
+                <div className="relative rounded-lg overflow-hidden h-40 bg-muted/20 border border-border group/vid">
+                  <video
+                    src={headerMedia.video_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    autoPlay
+                  />
+                  <button
+                    onClick={() =>
+                      setHeaderMedia({ ...headerMedia, video_url: "" })
+                    }
+                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border rounded p-1.5 text-destructive hover:bg-destructive hover:text-white transition-all opacity-0 group-hover/vid:opacity-100"
+                    title="Remove video"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">
+                    Upload Video
+                  </Label>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleVideoUpload(f);
+                    }}
+                    className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-xs file:uppercase file:tracking-widest file:font-bold file:bg-card file:text-primary hover:file:bg-primary hover:file:text-primary-foreground file:cursor-pointer file:transition-all"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    MP4, WebM — max 50MB
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">
+                    Or Paste Video URL
+                  </Label>
+                  <Input
+                    value={headerMedia.video_url}
+                    onChange={(e) =>
+                      setHeaderMedia({
+                        ...headerMedia,
+                        video_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                    className="bg-background border-border"
+                  />
+                </div>
+              </div>
+              {uploadingMedia && (
+                <p className="text-xs text-primary animate-pulse">
+                  Uploading...
+                </p>
+              )}
+            </Card>
+          )}
         </div>
       )}
 
@@ -328,30 +661,20 @@ export function AdminSettings() {
               <Mail className="h-4 w-4" /> Contact Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Email
-                </Label>
-                <Input
-                  value={contact.email}
-                  onChange={(e) =>
-                    setContact({ ...contact, email: e.target.value })
-                  }
-                  className="bg-background border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Phone
-                </Label>
-                <Input
-                  value={contact.phone}
-                  onChange={(e) =>
-                    setContact({ ...contact, phone: e.target.value })
-                  }
-                  className="bg-background border-border"
-                />
-              </div>
+              {(["email", "phone"] as const).map((f) => (
+                <div key={f} className="space-y-2">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                    {f}
+                  </Label>
+                  <Input
+                    value={contact[f]}
+                    onChange={(e) =>
+                      setContact({ ...contact, [f]: e.target.value })
+                    }
+                    className="bg-background border-border"
+                  />
+                </div>
+              ))}
               <div className="space-y-2 md:col-span-2">
                 <Label className="text-xs uppercase tracking-widest text-muted-foreground">
                   Address
@@ -367,10 +690,9 @@ export function AdminSettings() {
               </div>
             </div>
           </Card>
-
           <Card className="bg-card border-border p-6 space-y-4">
             <h2 className="text-xs uppercase tracking-widest font-bold text-primary">
-              Social Media Links
+              Social Media
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {(["instagram", "facebook", "whatsapp"] as const).map((s) => (
@@ -379,7 +701,7 @@ export function AdminSettings() {
                     {s}
                   </Label>
                   <Input
-                    value={contact[s as keyof typeof contact]}
+                    value={contact[s]}
                     onChange={(e) =>
                       setContact({ ...contact, [s]: e.target.value })
                     }
@@ -446,7 +768,6 @@ export function AdminSettings() {
               <Plus className="h-4 w-4 mr-2" /> Add Question
             </Button>
           </div>
-
           {faqItems.map((item, i) => (
             <Card key={i} className="bg-card border-border p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -464,7 +785,6 @@ export function AdminSettings() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-
               {(["en", "ar", "tr"] as const).map((lang) => (
                 <div
                   key={lang}
@@ -472,23 +792,14 @@ export function AdminSettings() {
                 >
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      Q (
-                      {lang === "en"
-                        ? "English"
-                        : lang === "ar"
-                          ? "Arabic"
-                          : "Turkish"}
-                      )
+                      Q ({lang})
                     </Label>
                     <Input
                       value={item[`q_${lang}` as keyof typeof item]}
                       onChange={(e) => {
-                        const updated = [...faqItems];
-                        updated[i] = {
-                          ...updated[i],
-                          [`q_${lang}`]: e.target.value,
-                        };
-                        setFaqItems(updated);
+                        const u = [...faqItems];
+                        u[i] = { ...u[i], [`q_${lang}`]: e.target.value };
+                        setFaqItems(u);
                       }}
                       dir={lang === "ar" ? "rtl" : "ltr"}
                       className="bg-background border-border text-sm"
@@ -496,23 +807,14 @@ export function AdminSettings() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      A (
-                      {lang === "en"
-                        ? "English"
-                        : lang === "ar"
-                          ? "Arabic"
-                          : "Turkish"}
-                      )
+                      A ({lang})
                     </Label>
                     <Textarea
                       value={item[`a_${lang}` as keyof typeof item]}
                       onChange={(e) => {
-                        const updated = [...faqItems];
-                        updated[i] = {
-                          ...updated[i],
-                          [`a_${lang}`]: e.target.value,
-                        };
-                        setFaqItems(updated);
+                        const u = [...faqItems];
+                        u[i] = { ...u[i], [`a_${lang}`]: e.target.value };
+                        setFaqItems(u);
                       }}
                       dir={lang === "ar" ? "rtl" : "ltr"}
                       className="bg-background border-border text-sm resize-none"
@@ -549,7 +851,6 @@ export function AdminSettings() {
               </button>
             ))}
           </div>
-
           <Card className="bg-card border-border p-6 space-y-4">
             {(
               [

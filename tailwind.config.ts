@@ -55,9 +55,12 @@ export default {
       backgroundImage: {
         "gradient-gold": "var(--gradient-gold)",
         "gradient-navy": "var(--gradient-navy)",
+        "gradient-navy-light": "var(--gradient-navy-light)",
+        "gradient-shimmer": "var(--gradient-shimmer)",
       },
       boxShadow: {
         gold: "var(--shadow-gold)",
+        "gold-glow": "var(--shadow-gold-glow)",
         card: "var(--shadow-card)",
       },
       transitionTimingFunction: {

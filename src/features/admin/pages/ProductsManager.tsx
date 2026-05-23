@@ -93,8 +93,8 @@ interface ProductFormData {
   requires_shipping: boolean;
   is_active: boolean;
   is_featured: boolean;
-  is_best_seller: boolean; // ✅ NEW
-  is_new_arrival: boolean; // ✅ NEW
+  is_best_seller: boolean;
+  is_new_arrival: boolean;
   track_inventory: boolean;
   low_stock_threshold: number;
   total_stock: number;
@@ -129,8 +129,8 @@ const DEFAULT_FORM_STATE: ProductFormData = {
   requires_shipping: true,
   is_active: true,
   is_featured: false,
-  is_best_seller: false, // ✅ NEW
-  is_new_arrival: false, // ✅ NEW
+  is_best_seller: false,
+  is_new_arrival: false,
   track_inventory: true,
   low_stock_threshold: 5,
   total_stock: 0,

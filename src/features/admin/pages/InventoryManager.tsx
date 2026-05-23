@@ -1,28 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Html5Qrcode } from "html5-qrcode";
 import {
   Package,
   Search,
   QrCode,
   Plus,
   Minus,
-  History,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Download,
-  Camera,
   RefreshCw,
   TrendingUp,
   TrendingDown,
   Edit3,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -36,8 +32,6 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nContext";
 import QRCode from "qrcode";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface InventoryItem {
   id: string;
   product_id: string;
@@ -49,16 +43,8 @@ interface InventoryItem {
   qr_code: string | null;
   created_at: string;
   updated_at: string;
-  product?: {
-    name_en: string;
-    name_ar: string;
-    name_tr: string;
-    sku: string;
-  };
-  color_variant?: {
-    name_en: string;
-    hex_color: string | null;
-  };
+  product?: { name_en: string; name_ar: string; name_tr: string; sku: string };
+  color_variant?: { name_en: string; hex_color: string | null };
 }
 
 interface InventoryLog {
@@ -71,10 +57,8 @@ interface InventoryLog {
   quantity_after: number;
   notes: string | null;
   created_at: string;
-  product?: { name_en: string };
+  product?: { name_en: string; name_ar: string; name_tr: string };
 }
-
-// ─── Generate SKU ─────────────────────────────────────────────────────────────
 
 function generateSKU(productSku: string, suffix?: string): string {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -82,22 +66,32 @@ function generateSKU(productSku: string, suffix?: string): string {
   return suffix ? `${base}-${suffix}-${timestamp}` : `${base}-${timestamp}`;
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+const SCAN_BASE_URL = window.location.origin;
 
-function StatusBadge({ status }: { status: InventoryItem["status"] }) {
+function generateQRUrl(sku: string): string {
+  return `${SCAN_BASE_URL}/scan?sku=${encodeURIComponent(sku)}`;
+}
+
+function StatusBadge({
+  status,
+  t,
+}: {
+  status: InventoryItem["status"];
+  t: any;
+}) {
   const map = {
     in_stock: {
-      label: "In Stock",
+      label: t.admin.inventory.inStock,
       icon: CheckCircle,
       cls: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     low_stock: {
-      label: "Low Stock",
+      label: t.admin.inventory.lowStock,
       icon: AlertTriangle,
       cls: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
     },
     out_of_stock: {
-      label: "Out of Stock",
+      label: t.admin.inventory.outOfStock,
       icon: XCircle,
       cls: "bg-red-500/10 text-red-500 border-red-500/20",
     },
@@ -113,48 +107,48 @@ function StatusBadge({ status }: { status: InventoryItem["status"] }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export function InventoryManager() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
+  const inv = t.admin.inventory;
+
+  const getProductName = (item: InventoryItem) => {
+    if (locale === "ar")
+      return item.product?.name_ar || item.product?.name_en || "—";
+    if (locale === "tr")
+      return item.product?.name_tr || item.product?.name_en || "—";
+    return item.product?.name_en || "—";
+  };
+
+  const getLogProductName = (log: InventoryLog) => {
+    if (locale === "ar")
+      return log.product?.name_ar || log.product?.name_en || "—";
+    if (locale === "tr")
+      return log.product?.name_tr || log.product?.name_en || "—";
+    return log.product?.name_en || "—";
+  };
+
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [logs, setLogs] = useState<InventoryLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"inventory" | "logs">("inventory");
-
-  // Modals
   const [adjustModal, setAdjustModal] = useState<InventoryItem | null>(null);
   const [qrModal, setQrModal] = useState<InventoryItem | null>(null);
-  const [scanModal, setScanModal] = useState(false);
-
-  // Adjust form
   const [adjustType, setAdjustType] = useState<"add" | "remove" | "adjust">(
     "add",
   );
   const [adjustQty, setAdjustQty] = useState(1);
   const [adjustNotes, setAdjustNotes] = useState("");
-
-  // QR
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [scanInput, setScanInput] = useState("");
-  const [scanMode, setScanMode] = useState<"camera" | "manual">("camera");
-
-  // ── Fetch ───────────────────────────────────────────────────────────────────
 
   const fetchInventory = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("inventory")
       .select(
-        `
-        *,
-        product:products(name_en, name_ar, name_tr, sku),
-        color_variant:product_color_variants(name_en, hex_color)
-      `,
+        `*, product:products(name_en, name_ar, name_tr, sku), color_variant:product_color_variants(name_en, hex_color)`,
       )
       .order("updated_at", { ascending: false });
-
     if (data) setInventory(data as any);
     setLoading(false);
   };
@@ -162,7 +156,7 @@ export function InventoryManager() {
   const fetchLogs = async () => {
     const { data } = await supabase
       .from("inventory_logs")
-      .select(`*, product:products(name_en)`)
+      .select(`*, product:products(name_en, name_ar, name_tr)`)
       .order("created_at", { ascending: false })
       .limit(100);
     if (data) setLogs(data as any);
@@ -173,20 +167,15 @@ export function InventoryManager() {
     fetchLogs();
   }, []);
 
-  // ── Sync products → inventory ───────────────────────────────────────────────
-
   const syncInventory = async () => {
-    const loadingToast = toast.loading("Syncing inventory...");
+    const loadingToast = toast.loading(inv.syncing);
     try {
       const { data: products } = await supabase
         .from("products")
-        .select("id, sku, product_color_variants(id, name_en)");
-
+        .select("id, sku, product_color_variants(id, name_en, stock_quantity)");
       if (!products) return;
-
       for (const product of products) {
         const variants = (product as any).product_color_variants || [];
-
         if (variants.length > 0) {
           for (const variant of variants) {
             const { data: existing } = await supabase
@@ -195,17 +184,12 @@ export function InventoryManager() {
               .eq("product_id", product.id)
               .eq("color_variant_id", variant.id)
               .maybeSingle();
-
             if (!existing) {
               const sku = generateSKU(
                 product.sku,
                 variant.name_en.slice(0, 3).toUpperCase(),
               );
-              const qrData = JSON.stringify({
-                sku,
-                product_id: product.id,
-                variant_id: variant.id,
-              });
+              const qrData = generateQRUrl(sku);
               const qrUrl = await QRCode.toDataURL(qrData, {
                 width: 300,
                 margin: 2,
@@ -215,7 +199,7 @@ export function InventoryManager() {
                 product_id: product.id,
                 color_variant_id: variant.id,
                 sku,
-                quantity: 0,
+                quantity: variant.stock_quantity ?? 0,
                 qr_code: qrUrl,
               });
             }
@@ -227,15 +211,13 @@ export function InventoryManager() {
             .eq("product_id", product.id)
             .is("color_variant_id", null)
             .maybeSingle();
-
           if (!existing) {
             const sku = generateSKU(product.sku);
-            const qrData = JSON.stringify({ sku, product_id: product.id });
+            const qrData = generateQRUrl(sku);
             const qrUrl = await QRCode.toDataURL(qrData, {
               width: 300,
               margin: 2,
             });
-
             await supabase.from("inventory").insert({
               product_id: product.id,
               color_variant_id: null,
@@ -246,9 +228,8 @@ export function InventoryManager() {
           }
         }
       }
-
       toast.dismiss(loadingToast);
-      toast.success("Inventory synced!");
+      toast.success(inv.synced);
       fetchInventory();
     } catch (e: any) {
       toast.dismiss(loadingToast);
@@ -256,12 +237,9 @@ export function InventoryManager() {
     }
   };
 
-  // ── Adjust Stock ────────────────────────────────────────────────────────────
-
   const handleAdjust = async () => {
     if (!adjustModal) return;
     const item = adjustModal;
-
     let newQty = item.quantity;
     if (adjustType === "add") newQty += adjustQty;
     else if (adjustType === "remove")
@@ -272,7 +250,6 @@ export function InventoryManager() {
       .from("inventory")
       .update({ quantity: newQty })
       .eq("id", item.id);
-
     if (error) {
       toast.error(error.message);
       return;
@@ -287,8 +264,7 @@ export function InventoryManager() {
       quantity_after: newQty,
       notes: adjustNotes || null,
     });
-
-    toast.success("Stock updated!");
+    toast.success(t.admin.common.success);
     setAdjustModal(null);
     setAdjustQty(1);
     setAdjustNotes("");
@@ -296,17 +272,12 @@ export function InventoryManager() {
     fetchLogs();
   };
 
-  // ── QR Modal ────────────────────────────────────────────────────────────────
-
   const openQR = async (item: InventoryItem) => {
     setQrModal(item);
     if (item.qr_code) {
       setQrDataUrl(item.qr_code);
     } else {
-      const qrData = JSON.stringify({
-        sku: item.sku,
-        product_id: item.product_id,
-      });
+      const qrData = generateQRUrl(item.sku);
       const url = await QRCode.toDataURL(qrData, { width: 300, margin: 2 });
       setQrDataUrl(url);
     }
@@ -320,49 +291,15 @@ export function InventoryManager() {
     a.click();
   };
 
-  // ── QR Scan ─────────────────────────────────────────────────────────────────
-
-  const handleScan = async () => {
-    if (!scanInput.trim()) return;
-    try {
-      const parsed = JSON.parse(scanInput);
-      const sku = parsed.sku;
-      const item = inventory.find((i) => i.sku === sku);
-      if (!item) {
-        toast.error("Product not found");
-        return;
-      }
-      setScanModal(false);
-      setScanInput("");
-      setAdjustModal(item);
-      setAdjustType("remove");
-      toast.info(`Found: ${item.product?.name_en}`);
-    } catch {
-      // Try plain SKU
-      const item = inventory.find((i) => i.sku === scanInput.trim());
-      if (!item) {
-        toast.error("Product not found");
-        return;
-      }
-      setScanModal(false);
-      setScanInput("");
-      setAdjustModal(item);
-      setAdjustType("remove");
-    }
-  };
-
-  // ── Filter ──────────────────────────────────────────────────────────────────
-
   const filtered = inventory.filter((item) => {
     const q = searchQuery.toLowerCase();
     return (
       item.sku.toLowerCase().includes(q) ||
-      item.product?.name_en.toLowerCase().includes(q) ||
-      item.product?.name_ar?.includes(q)
+      item.product?.name_en?.toLowerCase().includes(q) ||
+      item.product?.name_ar?.includes(q) ||
+      item.product?.name_tr?.toLowerCase().includes(q)
     );
   });
-
-  // ── Stats ───────────────────────────────────────────────────────────────────
 
   const stats = {
     total: inventory.length,
@@ -371,33 +308,23 @@ export function InventoryManager() {
     outOfStock: inventory.filter((i) => i.status === "out_of_stock").length,
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const isRTL = locale === "ar";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-primary">Inventory</h1>
-          <p className="text-muted-foreground">
-            Stock management & QR tracking
-          </p>
+          <h1 className="font-display text-3xl text-primary">{inv.title}</h1>
+          <p className="text-muted-foreground">{inv.subtitle}</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setScanModal(true)}
-            className="bg-background border-border gap-2"
-          >
-            <Camera className="h-4 w-4" />
-            Scan QR
-          </Button>
           <Button
             onClick={syncInventory}
             className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            Sync Products
+            {inv.syncProducts}
           </Button>
         </div>
       </div>
@@ -406,25 +333,25 @@ export function InventoryManager() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
-            label: "Total SKUs",
+            label: inv.totalSKUs,
             value: stats.total,
             icon: Package,
             color: "text-primary",
           },
           {
-            label: "In Stock",
+            label: inv.inStock,
             value: stats.inStock,
             icon: CheckCircle,
             color: "text-green-500",
           },
           {
-            label: "Low Stock",
+            label: inv.lowStock,
             value: stats.lowStock,
             icon: AlertTriangle,
             color: "text-yellow-500",
           },
           {
-            label: "Out of Stock",
+            label: inv.outOfStock,
             value: stats.outOfStock,
             icon: XCircle,
             color: "text-red-500",
@@ -457,7 +384,7 @@ export function InventoryManager() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {tab === "inventory" ? "Stock" : "Movement Logs"}
+            {tab === "inventory" ? inv.stock : inv.movementLogs}
           </button>
         ))}
       </div>
@@ -465,10 +392,18 @@ export function InventoryManager() {
       {/* Search */}
       {activeTab === "inventory" && (
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground",
+              isRTL ? "right-3" : "left-3",
+            )}
+          />
           <Input
-            placeholder="Search by SKU or product name..."
-            className="pl-10 bg-background border-border"
+            placeholder={inv.searchPlaceholder}
+            className={cn(
+              "bg-background border-border",
+              isRTL ? "pr-10" : "pl-10",
+            )}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -482,12 +417,14 @@ export function InventoryManager() {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border bg-muted/30">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Product</th>
-                  <th className="px-6 py-4 font-medium">SKU</th>
-                  <th className="px-6 py-4 font-medium">Variant</th>
-                  <th className="px-6 py-4 font-medium">Quantity</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  <th className="px-6 py-4 font-medium">{inv.product}</th>
+                  <th className="px-6 py-4 font-medium">{inv.sku}</th>
+                  <th className="px-6 py-4 font-medium">{inv.variant}</th>
+                  <th className="px-6 py-4 font-medium">{inv.quantity}</th>
+                  <th className="px-6 py-4 font-medium">{inv.status}</th>
+                  <th className="px-6 py-4 font-medium text-right">
+                    {inv.actions}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -497,14 +434,14 @@ export function InventoryManager() {
                       colSpan={6}
                       className="px-6 py-12 text-center text-muted-foreground"
                     >
-                      Loading...
+                      {inv.loading}
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">
                       <p className="text-muted-foreground mb-3">
-                        No inventory records found.
+                        {inv.noRecords}
                       </p>
                       <Button
                         onClick={syncInventory}
@@ -512,7 +449,7 @@ export function InventoryManager() {
                         size="sm"
                         className="gap-2"
                       >
-                        <RefreshCw className="h-3 w-3" /> Sync Products
+                        <RefreshCw className="h-3 w-3" /> {inv.syncProducts}
                       </Button>
                     </td>
                   </tr>
@@ -524,7 +461,7 @@ export function InventoryManager() {
                     >
                       <td className="px-6 py-4">
                         <p className="font-bold text-foreground">
-                          {item.product?.name_en || "—"}
+                          {getProductName(item)}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
                           {item.product?.sku}
@@ -570,7 +507,7 @@ export function InventoryManager() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={item.status} />
+                        <StatusBadge status={item.status} t={t} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -579,7 +516,7 @@ export function InventoryManager() {
                             size="icon"
                             onClick={() => openQR(item)}
                             className="h-8 w-8 text-muted-foreground hover:text-primary"
-                            title="View QR Code"
+                            title={inv.viewQR}
                           >
                             <QrCode className="h-4 w-4" />
                           </Button>
@@ -591,7 +528,6 @@ export function InventoryManager() {
                               setAdjustType("add");
                             }}
                             className="h-8 w-8 text-green-500"
-                            title="Add Stock"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -603,7 +539,6 @@ export function InventoryManager() {
                               setAdjustType("remove");
                             }}
                             className="h-8 w-8 text-red-500"
-                            title="Remove Stock"
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -616,7 +551,6 @@ export function InventoryManager() {
                               setAdjustQty(item.quantity);
                             }}
                             className="h-8 w-8 text-primary"
-                            title="Set Quantity"
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
@@ -638,12 +572,12 @@ export function InventoryManager() {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border bg-muted/30">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Product</th>
-                  <th className="px-6 py-4 font-medium">Action</th>
-                  <th className="px-6 py-4 font-medium">Change</th>
-                  <th className="px-6 py-4 font-medium">Before → After</th>
-                  <th className="px-6 py-4 font-medium">Notes</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
+                  <th className="px-6 py-4 font-medium">{inv.product}</th>
+                  <th className="px-6 py-4 font-medium">{inv.action}</th>
+                  <th className="px-6 py-4 font-medium">{inv.change}</th>
+                  <th className="px-6 py-4 font-medium">{inv.beforeAfter}</th>
+                  <th className="px-6 py-4 font-medium">{inv.notes}</th>
+                  <th className="px-6 py-4 font-medium">{inv.date}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -653,7 +587,7 @@ export function InventoryManager() {
                       colSpan={6}
                       className="px-6 py-12 text-center text-muted-foreground"
                     >
-                      No logs yet.
+                      {inv.noLogs}
                     </td>
                   </tr>
                 ) : (
@@ -663,7 +597,7 @@ export function InventoryManager() {
                       className="hover:bg-muted/20 transition-colors"
                     >
                       <td className="px-6 py-4 font-medium text-foreground">
-                        {log.product?.name_en || "—"}
+                        {getLogProductName(log)}
                       </td>
                       <td className="px-6 py-4">
                         <Badge
@@ -718,30 +652,32 @@ export function InventoryManager() {
         </Card>
       )}
 
-      {/* ── Adjust Modal ── */}
+      {/* Adjust Modal */}
       <Dialog open={!!adjustModal} onOpenChange={() => setAdjustModal(null)}>
-        <DialogContent className="bg-card border-border max-w-md">
+        <DialogContent
+          className="bg-card border-border max-w-md"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-primary">
               {adjustType === "add"
-                ? "Add Stock"
+                ? inv.addStock
                 : adjustType === "remove"
-                  ? "Remove Stock"
-                  : "Set Quantity"}
+                  ? inv.removeStock
+                  : inv.setQuantity}
             </DialogTitle>
           </DialogHeader>
           {adjustModal && (
             <div className="space-y-5 pt-2">
               <div className="p-3 rounded-lg bg-muted/20 border border-border">
                 <p className="font-bold text-foreground">
-                  {adjustModal.product?.name_en}
+                  {getProductName(adjustModal)}
                 </p>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-                  SKU: {adjustModal.sku} • Current: {adjustModal.quantity}
+                  SKU: {adjustModal.sku} • {inv.currentQty}:{" "}
+                  {adjustModal.quantity}
                 </p>
               </div>
-
-              {/* Type Selector */}
               <div className="flex gap-2">
                 {(["add", "remove", "adjust"] as const).map((type) => (
                   <button
@@ -758,14 +694,17 @@ export function InventoryManager() {
                         : "border-border text-muted-foreground hover:border-primary/30",
                     )}
                   >
-                    {type}
+                    {type === "add"
+                      ? inv.add
+                      : type === "remove"
+                        ? inv.remove
+                        : inv.adjust}
                   </button>
                 ))}
               </div>
-
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-                  {adjustType === "adjust" ? "New Quantity" : "Quantity"}
+                  {adjustType === "adjust" ? inv.newQuantity : inv.quantity}
                 </Label>
                 <div className="flex items-center gap-3">
                   <button
@@ -799,39 +738,37 @@ export function InventoryManager() {
                 </div>
                 {adjustType !== "adjust" && (
                   <p className="text-[10px] text-muted-foreground">
-                    Result:{" "}
+                    {inv.result}:{" "}
                     {adjustType === "add"
                       ? adjustModal.quantity + adjustQty
                       : Math.max(0, adjustModal.quantity - adjustQty)}
                   </p>
                 )}
               </div>
-
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-                  Notes (Optional)
+                  {inv.notesOptional}
                 </Label>
                 <Textarea
                   value={adjustNotes}
                   onChange={(e) => setAdjustNotes(e.target.value)}
-                  placeholder="Reason for adjustment..."
+                  placeholder={inv.reasonPlaceholder}
                   className="bg-background border-border h-20 resize-none"
                 />
               </div>
-
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => setAdjustModal(null)}
                   className="flex-1 bg-background border-border"
                 >
-                  Cancel
+                  {inv.cancel}
                 </Button>
                 <Button
                   onClick={handleAdjust}
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold"
                 >
-                  Confirm
+                  {inv.confirm}
                 </Button>
               </div>
             </div>
@@ -839,12 +776,15 @@ export function InventoryManager() {
         </DialogContent>
       </Dialog>
 
-      {/* ── QR Modal ── */}
+      {/* QR Modal */}
       <Dialog open={!!qrModal} onOpenChange={() => setQrModal(null)}>
-        <DialogContent className="bg-card border-border max-w-sm">
+        <DialogContent
+          className="bg-card border-border max-w-sm"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-primary">
-              QR Code
+              {inv.qrCode}
             </DialogTitle>
           </DialogHeader>
           {qrModal && (
@@ -856,7 +796,7 @@ export function InventoryManager() {
               </div>
               <div className="text-center">
                 <p className="font-bold text-foreground">
-                  {qrModal.product?.name_en}
+                  {getProductName(qrModal)}
                 </p>
                 <code className="text-[11px] text-primary">{qrModal.sku}</code>
               </div>
@@ -865,146 +805,10 @@ export function InventoryManager() {
                 className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Download className="h-4 w-4" />
-                Download QR
+                {inv.downloadQR}
               </Button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Scan Modal ── */}
-      <Dialog
-        open={scanModal}
-        onOpenChange={(open) => {
-          if (!open) {
-            // Stop camera
-            if ((window as any).__qrScanner) {
-              (window as any).__qrScanner.stop().catch(() => {});
-              (window as any).__qrScanner = null;
-            }
-          }
-          setScanModal(open);
-        }}
-      >
-        <DialogContent className="bg-card border-border max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-primary">
-              Scan QR Code
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="flex gap-2 border-b border-border pb-3">
-              <button
-                onClick={() => setScanMode("camera")}
-                className={cn(
-                  "flex-1 py-2 text-[10px] uppercase tracking-widest font-bold rounded border transition-all",
-                  scanMode === "camera"
-                    ? "bg-primary/20 text-primary border-primary/30"
-                    : "border-border text-muted-foreground",
-                )}
-              >
-                Camera
-              </button>
-              <button
-                onClick={() => setScanMode("manual")}
-                className={cn(
-                  "flex-1 py-2 text-[10px] uppercase tracking-widest font-bold rounded border transition-all",
-                  scanMode === "manual"
-                    ? "bg-primary/20 text-primary border-primary/30"
-                    : "border-border text-muted-foreground",
-                )}
-              >
-                Manual
-              </button>
-            </div>
-
-            {scanMode === "camera" ? (
-              <div className="space-y-3">
-                <div
-                  id="qr-reader"
-                  className="w-full rounded-lg overflow-hidden"
-                />
-                <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest">
-                  Point camera at QR code
-                </p>
-                <Button
-                  onClick={() => {
-                    const scanner = new Html5Qrcode("qr-reader");
-                    (window as any).__qrScanner = scanner;
-                    scanner
-                      .start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        async (decodedText: string) => {
-                          await scanner.stop();
-                          (window as any).__qrScanner = null;
-                          setScanInput(decodedText);
-                          setScanModal(false);
-                          // Process scan
-                          try {
-                            const parsed = JSON.parse(decodedText);
-                            const item = inventory.find(
-                              (i) => i.sku === parsed.sku,
-                            );
-                            if (!item) {
-                              toast.error("Product not found");
-                              return;
-                            }
-                            setAdjustModal(item);
-                            setAdjustType("remove");
-                            toast.info(`Found: ${item.product?.name_en}`);
-                          } catch {
-                            const item = inventory.find(
-                              (i) => i.sku === decodedText.trim(),
-                            );
-                            if (!item) {
-                              toast.error("Product not found");
-                              return;
-                            }
-                            setAdjustModal(item);
-                            setAdjustType("remove");
-                          }
-                        },
-                        () => {},
-                      )
-                      .catch((err: any) => toast.error("Camera error: " + err));
-                  }}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold gap-2"
-                >
-                  <Camera className="h-4 w-4" />
-                  Start Camera
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Type the SKU manually:
-                </p>
-                <Input
-                  value={scanInput}
-                  onChange={(e) => setScanInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleScan()}
-                  placeholder="e.g. RB-001-ABC"
-                  className="bg-background border-border font-mono"
-                  autoFocus
-                />
-                <Button
-                  onClick={handleScan}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold"
-                >
-                  Find Product
-                </Button>
-              </div>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={() => setScanModal(false)}
-              className="w-full bg-background border-border"
-            >
-              Cancel
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

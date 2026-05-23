@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* ==========================================================================
    Royal Brands Fashion — Luxury Design System
@@ -11,18 +11,18 @@
 @layer base {
   :root {
     /* Brand palette */
-    --background: 226 57% 20%;          /* #15234d slightly darker than 1a2a5e for depth */
-    --foreground: 42 60% 92%;           /* soft cream */
+    --background: 226 57% 20%;
+    --foreground: 42 60% 92%;
 
-    --card: 226 45% 24%;                /* #213266 navy card */
+    --card: 226 45% 24%;
     --card-foreground: 42 60% 92%;
 
     --popover: 226 45% 24%;
     --popover-foreground: 42 60% 92%;
 
-    --primary: 46 65% 52%;              /* #D4AF37 luxury gold */
+    --primary: 46 65% 52%;
     --primary-foreground: 226 57% 20%;
-    --primary-glow: 46 80% 70%;         /* #e9d18b */
+    --primary-glow: 46 80% 70%;
 
     --secondary: 226 40% 28%;
     --secondary-foreground: 42 60% 92%;
@@ -36,28 +36,22 @@
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 46 45% 40%;               /* #937a32 muted gold */
+    --border: 46 45% 40%;
     --input: 226 35% 30%;
     --ring: 46 65% 52%;
 
     --radius: 0.25rem;
 
-    /* Cream surfaces */
-    --cream: 42 60% 92%;                /* #F5EFE0 */
+    --cream: 42 60% 92%;
     --cream-foreground: 226 57% 20%;
 
-    /* Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(46 65% 52%), hsl(46 80% 70%));
-    --gradient-navy: linear-gradient(180deg, hsl(226 57% 20%), hsl(226 45% 24%));
-    --gradient-shimmer: linear-gradient(
-      90deg,
-      hsl(46 65% 52%) 0%,
-      hsl(46 85% 75%) 50%,
-      hsl(46 65% 52%) 100%
-    );
+    --gradient-gold: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
+    --gradient-navy: radial-gradient(ellipse at center, hsl(var(--card)) 0%, hsl(var(--background)) 80%);
+    --gradient-navy-light: radial-gradient(ellipse at top, hsl(var(--card)/0.4) 0%, hsl(var(--background)) 100%);
+    --gradient-shimmer: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--primary)) 100%);
 
-    /* Shadows */
-    --shadow-gold: 0 8px 32px -8px hsl(46 65% 52% / 0.35);
+    --shadow-gold: 0 8px 32px -8px hsl(var(--primary) / 0.4);
+    --shadow-gold-glow: 0 0 20px -5px hsl(var(--primary) / 0.6);
     --shadow-card: 0 6px 24px -10px hsl(226 80% 4% / 0.7);
   }
 }
@@ -66,18 +60,19 @@
   * {
     @apply border-border;
   }
+
   html {
-    font-family: 'Inter', 'Tenor Sans', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
   }
   @media (max-width: 768px) {
     html {
-      font-size: 17px; /* Increased base size for better mobile readability */
+      font-size: 17px;
     }
   }
   html[lang="ar"] {
-    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
     line-height: 1.8;
   }
   html[lang="ar"] body {
@@ -87,32 +82,47 @@
     @apply bg-background text-foreground antialiased overflow-x-hidden;
     font-feature-settings: "ss01", "ss02";
     line-height: 1.6;
-    font-weight: 400; /* Increased from 300 for better readability */
+    font-weight: 400;
     width: 100%;
   }
-  h1, h2, h3, h4, h5 {
+
+  /* ── Display font = Cormorant Garamond ── */
+  .font-display,
+  h1,
+  h2,
+  h3 {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.01em;
+  }
+  h4,
+  h5 {
     @apply font-bold tracking-tight;
   }
-  .font-display {
-    font-family: 'Inter', sans-serif;
-    @apply font-bold;
-    letter-spacing: -0.02em;
+
+  h1 {
+    @apply text-4xl sm:text-4xl md:text-5xl lg:text-6xl;
   }
-  h1 { @apply text-4xl sm:text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl sm:text-3xl md:text-4xl lg:text-5xl; }
-  h3 { @apply text-2xl sm:text-2xl md:text-3xl lg:text-4xl; }
-  
+  h2 {
+    @apply text-3xl sm:text-3xl md:text-4xl lg:text-5xl;
+  }
+  h3 {
+    @apply text-2xl sm:text-2xl md:text-3xl lg:text-4xl;
+  }
+
   html[lang="ar"] h1,
   html[lang="ar"] h2,
   html[lang="ar"] h3,
   html[lang="ar"] h4,
   html[lang="ar"] h5,
   html[lang="ar"] .font-display {
-    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-family: "IBM Plex Sans Arabic", sans-serif;
     font-weight: 600;
     letter-spacing: 0;
   }
 }
+
+
 
 /* ==========================================================================
    Components & Utilities
@@ -144,10 +154,10 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shimmer 6s linear infinite;
+    animation: shimmer 5s linear infinite;
   }
 
-  /* Nav link gold underline */
+  /* Nav link */
   .nav-link {
     @apply relative inline-block py-1 text-[13px] md:text-[14px] uppercase tracking-[0.2em] text-cream drop-shadow-md transition-all duration-300 hover:text-primary hover:-translate-y-0.5 font-semibold;
   }
@@ -168,35 +178,112 @@
     perspective: 1000px;
   }
 
-  /* Product card */
+  /* ── Product card ── */
   .product-card {
     @apply relative overflow-hidden bg-card border border-transparent transition-all duration-500 flex flex-col h-full;
   }
   .product-card:hover {
     @apply border-primary/60;
     box-shadow: var(--shadow-gold);
+    transform: translateY(-4px);
   }
   .product-card-img {
     @apply transition-transform duration-700 ease-out;
   }
   .product-card:hover .product-card-img {
-    transform: scale(1.04);
+    transform: scale(1.06);
   }
   .product-card-info {
     @apply p-4 text-center flex-1 flex flex-col justify-between;
   }
   .product-card-title {
-    @apply font-display text-lg sm:text-base md:text-xl text-cream mb-1.5 leading-tight transition-colors duration-300 line-clamp-2 min-h-[3.5rem] md:min-h-[3.5rem] font-semibold;
+    @apply font-display text-xl sm:text-lg md:text-2xl text-cream mb-1.5 leading-tight transition-colors duration-300 line-clamp-2 min-h-[3.5rem] md:min-h-[3.5rem];
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 500;
+    font-style: italic;
+  }
+  .product-card:hover .product-card-title {
+    color: hsl(var(--primary-glow));
+    letter-spacing: 0.01em;
   }
 
+  /* Price shimmer on hover */
+  .product-card:hover .price-display {
+    letter-spacing: 0.04em;
+    transition:
+      letter-spacing 0.3s ease,
+      color 0.3s ease;
+  }
+
+  /* Stock urgency badge */
+  .badge-urgency {
+    @apply absolute bottom-14 start-3 bg-background/90 backdrop-blur-sm text-primary text-[8px] uppercase tracking-[0.2em] px-2 py-1 font-bold border border-primary/30;
+    animation: pulse-subtle 2.5s ease-in-out infinite;
+  }
+
+  /* Reveal animation */
   .reveal {
     opacity: 0;
     transform: translateY(24px);
-    @apply transition-all duration-700 ease-luxury;
+    @apply transition-all duration-700;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
   .reveal.in-view {
     opacity: 1;
     transform: none;
+  }
+
+  /* ── Hero video overlay grain texture ── */
+  .grain-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 15;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* ── Featured product layout ── */
+  .featured-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .featured-layout {
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: auto auto;
+    }
+    .featured-layout > :first-child {
+      grid-row: 1 / 3;
+    }
+  }
+
+  /* ── Section divider gold line ── */
+  .section-gold-line {
+    @apply h-px w-20 bg-primary my-4;
+    background: var(--gradient-gold);
+  }
+
+  /* ── Parallax category card ── */
+  .category-card-inner {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+  .category-card:hover .category-card-inner {
+    transform: scale(1.07);
+  }
+
+  /* ── Animated counter ── */
+  .trust-counter {
+    @apply text-primary font-display font-bold text-2xl md:text-3xl;
+    font-family: "Cormorant Garamond", Georgia, serif;
+  }
+
+  /* ── Video play indicator ── */
+  .video-mute-btn {
+    @apply absolute bottom-6 left-6 z-30 flex items-center gap-2 bg-background/50 backdrop-blur-md border border-primary/30 px-3 py-2 text-[9px] uppercase tracking-[0.3em] text-cream/80 hover:text-primary transition-all duration-300;
   }
 }
 
@@ -204,12 +291,113 @@
   .container-luxury {
     @apply mx-auto w-full max-w-[1400px] px-4 md:px-10;
   }
-  .text-cream { color: hsl(var(--cream)); }
-  .bg-cream { background-color: hsl(var(--cream)); }
+  .text-cream {
+    color: hsl(var(--cream));
+  }
+  .bg-cream {
+    background-color: hsl(var(--cream));
+  }
+  .ease-luxury {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
+/* ==========================================================================
+   Keyframes
+   ========================================================================== */
 @keyframes shimmer {
-  to { background-position: 200% center; }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes slow-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+.animate-slow-zoom {
+  animation: slow-zoom 12s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+.animate-float {
+  animation: float-up 4s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes draw-line {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Video hero specific */
+.hero-video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Scroll progress bar */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  z-index: 9999;
+  transition: width 0.1s linear;
+  width: 0%;
 }
 
 /* RTL adjustments */

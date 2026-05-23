@@ -20,6 +20,7 @@ import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import ReturnRules from "./pages/ReturnRules";
 import OrderSuccess from "./pages/OrderSuccess";
+import QRScan from "@/pages/QRScan";
 
 // Admin Imports
 import { AdminLayout } from "./features/admin/components/AdminLayout";
@@ -66,6 +67,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/order-success" element={<OrderSuccess />} />
             </Route>
+
+            {/* QR Scan — standalone, no layout */}
+            <Route path="/scan" element={<QRScan />} />
 
             {/* Informational Routes */}
             <Route element={<InfoLayout />}>

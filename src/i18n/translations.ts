@@ -6,15 +6,15 @@ export const dict = {
   en: {
     brand: "Royal Brands Fashion",
     tagline: "Timeless Luxury, Reimagined",
-    nav: { 
-      shop: "All Collection", 
+    nav: {
+      shop: "All Collection",
       dresses: "Dresses",
       modestDresses: "Modest Dresses",
       eveningDresses: "Evening Dresses",
       weddingDresses: "Wedding Dresses",
       engagementDresses: "Engagement Dresses",
-      about: "About", 
-      contact: "Contact" 
+      about: "About",
+      contact: "Contact",
     },
     hero: {
       title: "Refined Elegance",
@@ -25,13 +25,18 @@ export const dict = {
       bestsellers: "Best Sellers",
       bestsellersSub: "Pieces our clients return to, season after season.",
       categories: "Collections",
-      categoriesSub: "Experience the artistry of our curated luxury dress collections.",
+      categoriesSub:
+        "Experience the artistry of our curated luxury dress collections.",
       newArrivals: "New Arrivals",
       reviews: "Royal Experiences",
       reviewsTag: "Voices of Excellence",
       verified: "Verified Client",
     },
-    trust: { shipping: "Premium Quality", secure: "Secure Payment", cod: "Flexible Payment Options" },
+    trust: {
+      shipping: "Premium Quality",
+      secure: "Secure Payment",
+      cod: "Flexible Payment Options",
+    },
     product: {
       addToCart: "Add to Cart",
       outOfStock: "Out of Stock",
@@ -39,7 +44,8 @@ export const dict = {
       color: "Color",
       quantity: "Quantity",
       shipping: "Shipping & Returns",
-      shippingText: "Complimentary worldwide shipping on all orders. 14-day returns on unworn items.",
+      shippingText:
+        "Complimentary worldwide shipping on all orders. 14-day returns on unworn items.",
       related: "You May Also Love",
       relatedTag: "Discover More",
       sizeGuide: "Size Guide",
@@ -96,7 +102,8 @@ export const dict = {
       secureSsl: "Secure SSL",
       turkeyDelivery: "Turkey Delivery",
       whatsappOrder: "WhatsApp Order",
-      whatsappNote: "Complete your order securely and directly via our WhatsApp team.",
+      whatsappNote:
+        "Complete your order securely and directly via our WhatsApp team.",
     },
     footer: {
       shop: "Luxury Dresses",
@@ -129,10 +136,20 @@ export const dict = {
       failed: "Authentication Failed",
       invalid: "Please verify your credentials and try again.",
     },
-    common: { from: "From", sale: "Sale", new: "New", featured: "Featured", viewAll: "View All", search: "Search", selectLanguage: "Select Language", account: "Account" },
+    common: {
+      from: "From",
+      sale: "Sale",
+      new: "New",
+      featured: "Featured",
+      viewAll: "View All",
+      search: "Search",
+      selectLanguage: "Select Language",
+      account: "Account",
+    },
     contactInfo: {
       title: "Contact Us",
-      subtitle: "We're here to assist you with any questions or styling advice.",
+      subtitle:
+        "We're here to assist you with any questions or styling advice.",
       email: "Email",
       phone: "Phone",
       address: "Address",
@@ -141,17 +158,20 @@ export const dict = {
       emailLabel: "Your Email",
       messageLabel: "Your Message",
       submitBtn: "Send Message",
-      supportDesc: "Our dedicated client advisors are available Monday through Saturday to provide personalized support and styling guidance for your special occasions.",
+      supportDesc:
+        "Our dedicated client advisors are available Monday through Saturday to provide personalized support and styling guidance for your special occasions.",
       social: "Follow Our Journey",
-      successMsg: "Your message has been sent successfully. We will get back to you shortly.",
+      successMsg:
+        "Your message has been sent successfully. We will get back to you shortly.",
     },
     faqPage: {
       title: "Frequently Asked Questions",
-      subtitle: "Find answers to our most common inquiries regarding our luxury collections and services.",
+      subtitle:
+        "Find answers to our most common inquiries regarding our luxury collections and services.",
       categories: {
         orders: "Orders & Shipping",
         returns: "Returns & Exchanges",
-        products: "Products & Sizing"
+        products: "Products & Sizing",
       },
       q1: "What payment methods do you accept?",
       a1: "We accept all major credit cards, secure SSL transactions, and Cash on Delivery with an additional handling fee.",
@@ -167,11 +187,16 @@ export const dict = {
     returnRules: {
       title: "Return Policy",
       subtitle: "Our commitment to your complete satisfaction.",
-      policyDetails: "We gladly accept returns of unworn, unaltered items with original tags attached within 14 days of delivery. Returns that do not meet our policy will not be accepted and will be sent back to you.",
-      exchangeConditions: "If you wish to exchange an item for a different size or color, please return the original item and place a new order. Alternatively, contact our client advisors for assistance.",
-      timeframe: "Returns must be initiated and shipped back to our facility within 14 days of receiving your order.",
-      conditionRequirements: "Products must be returned in their original condition, unworn, unwashed, and with all original Royal Brands tags still attached. Items that show signs of wear, perfume, or damage will be declined.",
-      refundProcess: "Once your return is received and inspected, we will notify you of the approval or rejection of your refund. Approved refunds will be processed, and a credit will automatically be applied to your original method of payment within 5-10 business days."
+      policyDetails:
+        "We gladly accept returns of unworn, unaltered items with original tags attached within 14 days of delivery. Returns that do not meet our policy will not be accepted and will be sent back to you.",
+      exchangeConditions:
+        "If you wish to exchange an item for a different size or color, please return the original item and place a new order. Alternatively, contact our client advisors for assistance.",
+      timeframe:
+        "Returns must be initiated and shipped back to our facility within 14 days of receiving your order.",
+      conditionRequirements:
+        "Products must be returned in their original condition, unworn, unwashed, and with all original Royal Brands tags still attached. Items that show signs of wear, perfume, or damage will be declined.",
+      refundProcess:
+        "Once your return is received and inspected, we will notify you of the approval or rejection of your refund. Approved refunds will be processed, and a credit will automatically be applied to your original method of payment within 5-10 business days.",
     },
     admin: {
       sidebar: {
@@ -181,20 +206,20 @@ export const dict = {
         categories: "Categories",
         settings: "Settings",
         logout: "Logout",
-        portal: "Admin Portal"
+        portal: "Admin Portal",
       },
       topbar: {
         role: "Store Manager",
         user: "Admin User",
-        viewStore: "View Store"
+        viewStore: "View Store",
       },
       dashboard: {
         totalRevenue: "Total Revenue",
-        
+
         totalOrders: "Total Orders",
         totalProducts: "Total Products",
         recentActivity: "Recent Activity",
-        monthlySales: "Monthly Sales Overview"
+        monthlySales: "Monthly Sales Overview",
       },
       products: {
         title: "Products",
@@ -263,15 +288,16 @@ export const dict = {
             colors: "Color Variants",
             images: "Images",
             details: "Description & Details",
-            additional: "Additional Options"
+            additional: "Additional Options",
           },
           validation: {
             required: "This field is required",
-            unsaved: "You have unsaved changes. Are you sure you want to close?",
+            unsaved:
+              "You have unsaved changes. Are you sure you want to close?",
             maxImages: "Maximum 10 images total allowed",
-            maxFileSize: "Image must be less than 5MB"
-          }
-        }
+            maxFileSize: "Image must be less than 5MB",
+          },
+        },
       },
       orders: {
         title: "Orders",
@@ -293,8 +319,8 @@ export const dict = {
           cancelled: "Cancelled",
           paid: "Paid",
           pending: "Pending",
-          refunded: "Refunded"
-        }
+          refunded: "Refunded",
+        },
       },
       categories: {
         title: "Categories",
@@ -310,8 +336,8 @@ export const dict = {
         modal: {
           addTitle: "Add New Category",
           editTitle: "Edit Category",
-          image: "Category Image"
-        }
+          image: "Category Image",
+        },
       },
       settings: {
         title: "Settings",
@@ -323,46 +349,108 @@ export const dict = {
         logo: "Store Logo",
         timezone: "Timezone",
         save: "Save Changes",
-        paymentPlaceholder: "Payment gateway configuration coming soon"
+        paymentPlaceholder: "Payment gateway configuration coming soon",
       },
       common: {
         success: "Changes saved successfully",
         error: "An error occurred",
         confirm: "Confirm",
         cancel: "Cancel",
-        delete: "Delete"
-      }
-    }
+        delete: "Delete",
+      },
+
+      inventory: {
+        title: "Inventory",
+        subtitle: "Stock management & QR tracking",
+        scanQR: "Scan QR",
+        syncProducts: "Sync Products",
+        totalSKUs: "Total SKUs",
+        inStock: "In Stock",
+        lowStock: "Low Stock",
+        outOfStock: "Out of Stock",
+        stock: "Stock",
+        movementLogs: "Movement Logs",
+        searchPlaceholder: "Search by SKU or product name...",
+        product: "Product",
+        sku: "SKU",
+        variant: "Variant",
+        quantity: "Quantity",
+        status: "Status",
+        actions: "Actions",
+        noRecords: "No inventory records found.",
+        loading: "Loading...",
+        noLogs: "No logs yet.",
+        action: "Action",
+        change: "Change",
+        beforeAfter: "Before → After",
+        notes: "Notes",
+        date: "Date",
+        addStock: "Add Stock",
+        removeStock: "Remove Stock",
+        setQuantity: "Set Quantity",
+        currentQty: "Current",
+        add: "Add",
+        remove: "Remove",
+        adjust: "Adjust",
+        newQuantity: "New Quantity",
+        notesOptional: "Notes (Optional)",
+        reasonPlaceholder: "Reason for adjustment...",
+        cancel: "Cancel",
+        confirm: "Confirm",
+        result: "Result",
+        qrCode: "QR Code",
+        downloadQR: "Download QR",
+        scanQRCode: "Scan QR Code",
+        camera: "Camera",
+        manual: "Manual",
+        pointCamera: "Point camera at QR code",
+        startCamera: "Start Camera",
+        typeSkuManually: "Type the SKU manually:",
+        findProduct: "Find Product",
+        productFound: "Found",
+        productNotFound: "Product not found",
+        cameraError: "Camera error",
+        syncing: "Syncing inventory...",
+        synced: "Inventory synced!",
+        viewQR: "View QR Code",
+      },
+    },
   },
   ar: {
     brand: "رويال براندز فاشن",
     tagline: "رؤية عصرية للفخامة الخالدة",
-    nav: { 
-      shop: "جميع التشكيلات", 
+    nav: {
+      shop: "جميع التشكيلات",
       dresses: "فساتين",
       modestDresses: "فساتين للمحجبات",
       eveningDresses: "فساتين للسهره",
       weddingDresses: "فساتين زفاف",
       engagementDresses: "فساتين للخطبه",
-      about: "عن العلامة", 
-      contact: "اتصل بنا" 
+      about: "عن العلامة",
+      contact: "اتصل بنا",
     },
-    hero: { 
-      title: "فخامة رصينة", 
-      subtitle: "اكتشفي مجموعتنا المختارة — صُممت خصيصاً لمن تقدّر الرقي والجمال.", 
-      cta: "تسوقي التشكيلة" 
+    hero: {
+      title: "فخامة رصينة",
+      subtitle:
+        "اكتشفي مجموعتنا المختارة — صُممت خصيصاً لمن تقدّر الرقي والجمال.",
+      cta: "تسوقي التشكيلة",
     },
     sections: {
       bestsellers: "الأكثر مبيعاً",
       bestsellersSub: "قطع تعود إليها عميلاتنا موسماً بعد آخر بجمال لا يبهt.",
       categories: "التشكيلات",
-      categoriesSub: "استمتعي بجمال تشكيلاتنا المختارة من فساتين السهرة الراقية.",
+      categoriesSub:
+        "استمتعي بجمال تشكيلاتنا المختارة من فساتين السهرة الراقية.",
       newArrivals: "وصل حديثاً",
       reviews: "آراء عميلاتنا",
       reviewsTag: "أصوات الرقي",
       verified: "عميلة موثقة",
     },
-    trust: { shipping: "جودة استثنائية", secure: "دفع آمن ومحمي", cod: "خيارات دفع متنوعة" },
+    trust: {
+      shipping: "جودة استثنائية",
+      secure: "دفع آمن ومحمي",
+      cod: "خيارات دفع متنوعة",
+    },
     product: {
       addToCart: "أضف إلى السلة",
       outOfStock: "نفد من المخزون",
@@ -370,13 +458,15 @@ export const dict = {
       color: "اللون",
       quantity: "الكمية",
       shipping: "الشحن والإرجاع",
-      shippingText: "شحن مجاني لكافة الوجهات. إمكانية الإرجاع خلال 14 يوماً للقطع غير المستخدمة.",
+      shippingText:
+        "شحن مجاني لكافة الوجهات. إمكانية الإرجاع خلال 14 يوماً للقطع غير المستخدمة.",
       related: "قد يعجبكِ أيضاً",
       relatedTag: "اكتشفي المزيد",
       sizeGuide: "دليل المقاسات",
       zoom: "مرري للتكبير",
       selectionNotFound: "عذراً، لم يتم العثور على القطعة",
-      selectionNotFoundText: "لم نتمكن من العثور على ما تبحثين عنه في الوقت الحالي.",
+      selectionNotFoundText:
+        "لم نتمكن من العثور على ما تبحثين عنه في الوقت الحالي.",
       backToCollections: "العودة للتشكيلات",
     },
     cart: {
@@ -460,7 +550,16 @@ export const dict = {
       failed: "فشل التحقق من الهوية",
       invalid: "يرجى مراجعة البيانات والمحاولة مرة أخرى.",
     },
-    common: { from: "من", sale: "تخفيض", new: "جديد", featured: "مميز", viewAll: "عرض الكل", search: "بحث", selectLanguage: "اخter اللغة", account: "الحساب" },
+    common: {
+      from: "من",
+      sale: "تخفيض",
+      new: "جديد",
+      featured: "مميز",
+      viewAll: "عرض الكل",
+      search: "بحث",
+      selectLanguage: "اخter اللغة",
+      account: "الحساب",
+    },
     contactInfo: {
       title: "اتصل بنا",
       subtitle: "نحن هنا لمساعدتكِ في أي استفسارات أو تقديم نصائح حول الأناقة.",
@@ -472,17 +571,19 @@ export const dict = {
       emailLabel: "البريد الإلكتروني",
       messageLabel: "رسالتك",
       submitBtn: "إرسال الرسالة",
-      supportDesc: "فريق مستشاري العملاء المخصص لدينا متاح من الإثنين إلى السبت لتقديم دعم شخصي وتوجيهات خاصة لاختيار إطلالات مناسباتك الخاصة.",
+      supportDesc:
+        "فريق مستشاري العملاء المخصص لدينا متاح من الإثنين إلى السبت لتقديم دعم شخصي وتوجيهات خاصة لاختيار إطلالات مناسباتك الخاصة.",
       social: "تابعي رحلتنا",
       successMsg: "تم إرسال رسالتك بنجاح. سنرد عليكِ في أقرب وقت ممكن.",
     },
     faqPage: {
       title: "الأسئلة الشائعة",
-      subtitle: "اكتشفي إجابات أكثر استفساراتنا شيوعًا حول تشكيلاتنا الفاخرة وخدماتنا.",
+      subtitle:
+        "اكتشفي إجابات أكثر استفساراتنا شيوعًا حول تشكيلاتنا الفاخرة وخدماتنا.",
       categories: {
         orders: "الطلبات والشحن",
         returns: "الاستبدال والاسترجاع",
-        products: "المنتجات والمقاسات"
+        products: "المنتجات والمقاسات",
       },
       q1: "ما هي طرق الدفع المقبولة لديكم؟",
       a1: "نقبل جميع البطاقات الائتمانية الرئيسية، التحويلات الآمنة بتقنية SSL، والدفع عند الاستلام مع رسوم خدمة إضافية.",
@@ -498,11 +599,16 @@ export const dict = {
     returnRules: {
       title: "سياسة الإرجاع",
       subtitle: "التزامنا برضاكِ التام.",
-      policyDetails: "يسعدنا قبول المرتجعات للقطع غير الملبوسة وغير المعدلة، شرط أن تكون مرفقة بالملصقات الأصلية، خلال 14 يومًا من استلام الطلب. المرتجعات التي لا تتوافق مع سياستنا سيتم رفضها وإعادتها إليكِ.",
-      exchangeConditions: "إذا كنتِ ترغبين في استبدال قطعة بلون أو مقاس آخر، يُرجى إرجاع القطعة الأصلية وإتمام طلب جديد. كما يمكنكِ التواصل مع مستشاري العملاء لمساعدتك.",
-      timeframe: "يجب تقديم طلب الإرجاع وشحن القطعة مرة أخرى إلى منشأتنا خلال 14 يومًا من تاريخ الاستلام.",
-      conditionRequirements: "يجب إعادة المنتجات بحالتها الأصلية، غير ملبوسة، غير مغسولة، ومحتفظة بكافة ملصقات رويال براندز الأصلية. القطع التي تظهر عليها علامات الاستخدام، العطور، أو التلف سيتم رفض استلامها.",
-      refundProcess: "بمجرد استلام القطعة المرتجعة ومعاينتها، سنقوم بإعلامك بقبول أو رفض طلب الاسترداد. عند الموافقة، سيتم معالجة المبلغ وإعادته إلى طريقة الدفع الأصلية خلال 5 إلى 10 أيام عمل."
+      policyDetails:
+        "يسعدنا قبول المرتجعات للقطع غير الملبوسة وغير المعدلة، شرط أن تكون مرفقة بالملصقات الأصلية، خلال 14 يومًا من استلام الطلب. المرتجعات التي لا تتوافق مع سياستنا سيتم رفضها وإعادتها إليكِ.",
+      exchangeConditions:
+        "إذا كنتِ ترغبين في استبدال قطعة بلون أو مقاس آخر، يُرجى إرجاع القطعة الأصلية وإتمام طلب جديد. كما يمكنكِ التواصل مع مستشاري العملاء لمساعدتك.",
+      timeframe:
+        "يجب تقديم طلب الإرجاع وشحن القطعة مرة أخرى إلى منشأتنا خلال 14 يومًا من تاريخ الاستلام.",
+      conditionRequirements:
+        "يجب إعادة المنتجات بحالتها الأصلية، غير ملبوسة، غير مغسولة، ومحتفظة بكافة ملصقات رويال براندز الأصلية. القطع التي تظهر عليها علامات الاستخدام، العطور، أو التلف سيتم رفض استلامها.",
+      refundProcess:
+        "بمجرد استلام القطعة المرتجعة ومعاينتها، سنقوم بإعلامك بقبول أو رفض طلب الاسترداد. عند الموافقة، سيتم معالجة المبلغ وإعادته إلى طريقة الدفع الأصلية خلال 5 إلى 10 أيام عمل.",
     },
     admin: {
       sidebar: {
@@ -512,19 +618,19 @@ export const dict = {
         categories: "التصنيفات",
         settings: "الإعدادات",
         logout: "تسجيل الخروج",
-        portal: "بوابة المسؤول"
+        portal: "بوابة المسؤول",
       },
       topbar: {
         role: "مدير المتجر",
         user: "المسؤول",
-        viewStore: "عرض المتجر"
+        viewStore: "عرض المتجر",
       },
       dashboard: {
         totalRevenue: "إجمالي الإيرادات",
         totalOrders: "إجمالي الطلبات",
         totalProducts: "إجمالي المنتجات",
         recentActivity: "النشاط الأخير",
-        monthlySales: "نظرة عامة على المبيعات الشهرية"
+        monthlySales: "نظرة عامة على المبيعات الشهرية",
       },
       products: {
         title: "المنتجات",
@@ -593,15 +699,15 @@ export const dict = {
             colors: "خيارات الألوان",
             images: "الصور",
             details: "الوصف والتفاصيل",
-            additional: "خيارات إضافية"
+            additional: "خيارات إضافية",
           },
           validation: {
             required: "هذا الحقل مطلوب",
             unsaved: "لديك تغييرات غير محفوظة. هل أنت متأكد من الإغلاق؟",
             maxImages: "الحد الأقصى 10 صور إجمالاً",
-            maxFileSize: "يجب أن تكون الصورة أقل من 5 ميجابايت"
-          }
-        }
+            maxFileSize: "يجب أن تكون الصورة أقل من 5 ميجابايت",
+          },
+        },
       },
       orders: {
         title: "الطلبات",
@@ -623,8 +729,8 @@ export const dict = {
           cancelled: "ملغي",
           paid: "تم الدفع",
           pending: "قيد الانتظار",
-          refunded: "تم الاسترداد"
-        }
+          refunded: "تم الاسترداد",
+        },
       },
       categories: {
         title: "التصنيفات",
@@ -640,8 +746,8 @@ export const dict = {
         modal: {
           addTitle: "إضافة تصنيف جديد",
           editTitle: "تعديل التصنيف",
-          image: "صورة التصنيف"
-        }
+          image: "صورة التصنيف",
+        },
       },
       settings: {
         title: "Settings",
@@ -653,42 +759,108 @@ export const dict = {
         logo: "Store Logo",
         timezone: "Timezone",
         save: "Save Changes",
-        paymentPlaceholder: "Payment gateway configuration coming soon"
+        paymentPlaceholder: "Payment gateway configuration coming soon",
       },
       common: {
         success: "Changes saved successfully",
         error: "An error occurred",
         confirm: "Confirm",
         cancel: "Cancel",
-        delete: "Delete"
-      }
-    }
+        delete: "Delete",
+      },
+
+      inventory: {
+        title: "المخزون",
+        subtitle: "إدارة المخزون وتتبع QR",
+        scanQR: "مسح QR",
+        syncProducts: "مزامنة المنتجات",
+        totalSKUs: "إجمالي الوحدات",
+        inStock: "متوفر",
+        lowStock: "مخزون منخفض",
+        outOfStock: "نفد المخزون",
+        stock: "المخزون",
+        movementLogs: "سجل الحركة",
+        searchPlaceholder: "البحث بالـ SKU أو اسم المنتج...",
+        product: "المنتج",
+        sku: "الرمز",
+        variant: "المتغير",
+        quantity: "الكمية",
+        status: "الحالة",
+        actions: "الإجراءات",
+        noRecords: "لا توجد سجلات مخزون.",
+        loading: "جارٍ التحميل...",
+        noLogs: "لا توجد سجلات بعد.",
+        action: "الإجراء",
+        change: "التغيير",
+        beforeAfter: "قبل ← بعد",
+        notes: "الملاحظات",
+        date: "التاريخ",
+        addStock: "إضافة مخزون",
+        removeStock: "سحب مخزون",
+        setQuantity: "تعيين الكمية",
+        currentQty: "الحالي",
+        add: "إضافة",
+        remove: "سحب",
+        adjust: "تعديل",
+        newQuantity: "الكمية الجديدة",
+        notesOptional: "ملاحظات (اختياري)",
+        reasonPlaceholder: "سبب التعديل...",
+        cancel: "إلغاء",
+        confirm: "تأكيد",
+        result: "النتيجة",
+        qrCode: "رمز QR",
+        downloadQR: "تحميل QR",
+        scanQRCode: "مسح رمز QR",
+        camera: "الكاميرا",
+        manual: "يدوي",
+        pointCamera: "وجّه الكاميرا نحو رمز QR",
+        startCamera: "تشغيل الكاميرا",
+        typeSkuManually: "أدخل الـ SKU يدوياً:",
+        findProduct: "بحث عن المنتج",
+        productFound: "تم العثور على",
+        productNotFound: "المنتج غير موجود",
+        cameraError: "خطأ في الكاميرا",
+        syncing: "جارٍ مزامنة المخزون...",
+        synced: "تمت المزامنة!",
+        viewQR: "عرض رمز QR",
+      },
+    },
   },
   tr: {
     brand: "Royal Brands Fashion",
     tagline: "Zamansız Lüks, Yeniden Yorumlandı",
-    nav: { 
-      shop: "Tüm Koleksiyon", 
+    nav: {
+      shop: "Tüm Koleksiyon",
       dresses: "Elbiseler",
       modestDresses: "Tesettür Elbiseleri",
       eveningDresses: "Abiye Elbiseler",
       weddingDresses: "Gelinlikler",
       engagementDresses: "Nişan Elbiseleri",
-      about: "Hakkımızda", 
-      contact: "İletişim" 
+      about: "Hakkımızda",
+      contact: "İletişim",
     },
-    hero: { title: "Zarif Asalet", subtitle: "Zarafetin tanımını yapan kadınlar için tasarlanan koleksiyonumuzu keşfedin.", cta: "Koleksiyonu İncele" },
+    hero: {
+      title: "Zarif Asalet",
+      subtitle:
+        "Zarafetin tanımını yapan kadınlar için tasarlanan koleksiyonumuzu keşfedin.",
+      cta: "Koleksiyonu İncele",
+    },
     sections: {
       bestsellers: "En Çok Satanlar",
       bestsellersSub: "Müşterilerimizin sezon sezon geri döndüğü parçalar.",
       categories: "Koleksiyonlar",
-      categoriesSub: "Özel olarak seçilmiş lüks elbise koleksiyonlarımızın sanatını deneyimleyin.",
+      categoriesSub:
+        "Özel olarak seçilmiş lüks elbise koleksiyonlarımızın sanatını deneyimleyin.",
       newArrivals: "Yeni Gelenler",
       reviews: "Royal Deneyimleri",
       reviewsTag: "Mükemmelliğin Sesleri",
       verified: "Doğrulanmış Müşteri",
     },
-    trust: { shipping: "Üstün Kalite", secure: "Güvenli Ödeme", cod: "Esnek Ödeme Seçenekleri" },
+    trust: {
+      shipping: "Üstün Kalite",
+      secure: "Güvenli Ödeme",
+      cod: "Esnek Ödeme Seçenekleri",
+    },
     product: {
       addToCart: "Sepete Ekle",
       outOfStock: "Stokta Yok",
@@ -696,7 +868,8 @@ export const dict = {
       color: "Renk",
       quantity: "Adet",
       shipping: "Kargo ve İade",
-      shippingText: "Tüm siparişlerde ücretsiz dünya çapında kargo. Giyilmemiş ürünlerde 14 gün iade.",
+      shippingText:
+        "Tüm siparişlerde ücretsiz dünya çapında kargo. Giyilmemiş ürünlerde 14 gün iade.",
       related: "Beğenebilecekleriniz",
       relatedTag: "Daha Fazlasını Keşfedin",
       sizeGuide: "Beden Tablosu",
@@ -753,7 +926,8 @@ export const dict = {
       secureSsl: "Güvenli SSL",
       turkeyDelivery: "Türkiye Teslimatı",
       whatsappOrder: "WhatsApp Siparişi",
-      whatsappNote: "Siparişinizi güvenli ve doğrudan WhatsApp ekibimizle tamamlayın.",
+      whatsappNote:
+        "Siparişinizi güvenli ve doğrudan WhatsApp ekibimizle tamamlayın.",
     },
     footer: {
       shop: "Lüks Elbiseler",
@@ -778,7 +952,8 @@ export const dict = {
       createAccountBtn: "Hesap Oluştur",
       noAccount: "Royal Brands'te yeni misiniz? Kayıt Olun",
       hasAccount: "Zaten üye misiniz? Giriş Yapın",
-      terms: "Lüks deneyim sizi bekliyor. Devam ederek şartlarımızı kabul etmiş olursunuz.",
+      terms:
+        "Lüks deneyim sizi bekliyor. Devam ederek şartlarımızı kabul etmiş olursunuz.",
       accountCreated: "Hesap Oluşturuldu",
       verifyEmail: "Hesabınız hazır. Şimdi giriş yapabilirsiniz.",
       welcomeBack: "Tekrar Hoş Geldiniz",
@@ -786,10 +961,20 @@ export const dict = {
       failed: "Kimlik Doğrulama Başarısız",
       invalid: "Lütfen bilgilerinizi kontrol edip tekrar deneyin.",
     },
-    common: { from: "Başlangıç", sale: "İndirim", new: "Yeni", featured: "Öne Çıkan", viewAll: "Tümünü Gör", search: "Ara", selectLanguage: "Dil Seçin", account: "Hesap" },
+    common: {
+      from: "Başlangıç",
+      sale: "İndirim",
+      new: "Yeni",
+      featured: "Öne Çıkan",
+      viewAll: "Tümünü Gör",
+      search: "Ara",
+      selectLanguage: "Dil Seçin",
+      account: "Hesap",
+    },
     contactInfo: {
       title: "Bize Ulaşın",
-      subtitle: "Herhangi bir sorunuz veya stil öneriniz için size yardımcı olmak için buradayız.",
+      subtitle:
+        "Herhangi bir sorunuz veya stil öneriniz için size yardımcı olmak için buradayız.",
       email: "E-posta",
       phone: "Telefon",
       address: "Adres",
@@ -798,17 +983,20 @@ export const dict = {
       emailLabel: "E-postanız",
       messageLabel: "Mesajınız",
       submitBtn: "Mesajı Gönder",
-      supportDesc: "Özel müşteri danışmanlarımız, özel günleriniz için kişiselleştirilmiş destek ve stil rehberliği sağlamak üzere Pazartesi'den Cumartesi'ye kadar hizmetinizdedir.",
+      supportDesc:
+        "Özel müşteri danışmanlarımız, özel günleriniz için kişiselleştirilmiş destek ve stil rehberliği sağlamak üzere Pazartesi'den Cumartesi'ye kadar hizmetinizdedir.",
       social: "Yolculuğumuzu Takip Edin",
-      successMsg: "Mesajınız başarıyla gönderildi. Size en kısa sürede dönüş yapacağız.",
+      successMsg:
+        "Mesajınız başarıyla gönderildi. Size en kısa sürede dönüş yapacağız.",
     },
     faqPage: {
       title: "Sıkça Sorulan Sosular",
-      subtitle: "Lüks koleksiyonlarımız ve hizmetlerimizle ilgili en yaygın sorularınızın cevaplarını bulun.",
+      subtitle:
+        "Lüks koleksiyonlarımız ve hizmetlerimizle ilgili en yaygın sorularınızın cevaplarını bulun.",
       categories: {
         orders: "Siparişler ve Kargo",
         returns: "İade ve Değişim",
-        products: "Ürünler ve Beden"
+        products: "Ürünler ve Beden",
       },
       q1: "Hangi ödeme yöntemlerini kabul ediyorsunuz?",
       a1: "Tüm büyük kredi kartlarını, güvenli SSL işlemlerini ve ek bir hizmet bedeli ile Kapıda Ödeme kabul ediyoruz.",
@@ -824,11 +1012,16 @@ export const dict = {
     returnRules: {
       title: "İade Politikası",
       subtitle: "Tam memnuniyetinize olan bağlılığımız.",
-      policyDetails: "Giyilmemiş, değiştirilmemiş ve orijinal etiketleri üzerinde olan ürünlerin iadelerini, teslimattan sonraki 14 gün içinde memnuniyetle kabul ediyoruz. Politikamıza uymayan iadeler kabul edilmeyecek ve size geri gönderilecektir.",
-      exchangeConditions: "Bir ürünü farklı bir beden veya renkle değiştirmek isterseniz, lütfen orijinal ürünü iade edin ve yeni bir sipariş verin. Alternatif olarak yardım için müşteri danışmanlarımızla iletişime geçebilirsiniz.",
-      timeframe: "İadeler, siparişinizi aldıktan sonraki 14 gün içinde başlatılmalı ve tesisimize geri gönderilmelidir.",
-      conditionRequirements: "Ürünler orijinal hallerinde, giyilmemiş, yıkanmamış ve tüm orijinal Royal Brands etiketleri hala üzerinde olacak şekilde iade edilmelidir. Aşınma, parfüm veya hasar belirtileri gösteren ürünler reddedilecektir.",
-      refundProcess: "İadeniz alınıp incelendikten sonra, iadenizin onaylandığı veya reddedildiği size bildirilecektir. Onaylanan iadeler işlenecek ve 5-10 iş günü içinde orijinal ödeme yönteminize otomatik olarak bir kredi yansıtılacaktır.",
+      policyDetails:
+        "Giyilmemiş, değiştirilmemiş ve orijinal etiketleri üzerinde olan ürünlerin iadelerini, teslimattan sonraki 14 gün içinde memnuniyetle kabul ediyoruz. Politikamıza uymayan iadeler kabul edilmeyecek ve size geri gönderilecektir.",
+      exchangeConditions:
+        "Bir ürünü farklı bir beden veya renkle değiştirmek isterseniz, lütfen orijinal ürünü iade edin ve yeni bir sipariş verin. Alternatif olarak yardım için müşteri danışmanlarımızla iletişime geçebilirsiniz.",
+      timeframe:
+        "İadeler, siparişinizi aldıktan sonraki 14 gün içinde başlatılmalı ve tesisimize geri gönderilmelidir.",
+      conditionRequirements:
+        "Ürünler orijinal hallerinde, giyilmemiş, yıkanmamış ve tüm orijinal Royal Brands etiketleri hala üzerinde olacak şekilde iade edilmelidir. Aşınma, parfüm veya hasar belirtileri gösteren ürünler reddedilecektir.",
+      refundProcess:
+        "İadeniz alınıp incelendikten sonra, iadenizin onaylandığı veya reddedildiği size bildirilecektir. Onaylanan iadeler işlenecek ve 5-10 iş günü içinde orijinal ödeme yönteminize otomatik olarak bir kredi yansıtılacaktır.",
     },
     admin: {
       sidebar: {
@@ -838,19 +1031,19 @@ export const dict = {
         categories: "Kategoriler",
         settings: "Ayarlar",
         logout: "Çıkış Yap",
-        portal: "Yönetici Paneli"
+        portal: "Yönetici Paneli",
       },
       topbar: {
         role: "Mağaza Müdürü",
         user: "Yönetici",
-        viewStore: "Mağazayı Görüntüle"
+        viewStore: "Mağazayı Görüntüle",
       },
       dashboard: {
         totalRevenue: "Toplam Gelir",
         totalOrders: "Toplam Sipariş",
         totalProducts: "Toplam Ürün",
         recentActivity: "Son Etkinlik",
-        monthlySales: "Aylık Satış Özeti"
+        monthlySales: "Aylık Satış Özeti",
       },
       products: {
         title: "Ürünler",
@@ -919,15 +1112,16 @@ export const dict = {
             colors: "Renk Varyantları",
             images: "Görseller",
             details: "Açıklama & Detaylar",
-            additional: "Ek Seçenekler"
+            additional: "Ek Seçenekler",
           },
           validation: {
             required: "Bu alan zorunludur",
-            unsaved: "Kaydedilmemiş değişiklikleriniz var. Kapatmak istediğinize emin misiniz?",
+            unsaved:
+              "Kaydedilmemiş değişiklikleriniz var. Kapatmak istediğinize emin misiniz?",
             maxImages: "Toplamda en fazla 10 görsel yüklenebilir",
-            maxFileSize: "Görsel boyutu 5MB'tan küçük olmalıdır"
-          }
-        }
+            maxFileSize: "Görsel boyutu 5MB'tan küçük olmalıdır",
+          },
+        },
       },
       orders: {
         title: "Siparişler",
@@ -949,8 +1143,8 @@ export const dict = {
           cancelled: "İptal Edildi",
           paid: "Ödendi",
           pending: "Bekliyor",
-          refunded: "İade Edildi"
-        }
+          refunded: "İade Edildi",
+        },
       },
       categories: {
         title: "Kategoriler",
@@ -966,8 +1160,8 @@ export const dict = {
         modal: {
           addTitle: "Yeni Kategori Ekle",
           editTitle: "Kategoriyi Düzenle",
-          image: "Kategori Görseli"
-        }
+          image: "Kategori Görseli",
+        },
       },
       settings: {
         title: "Ayarlar",
@@ -979,18 +1173,73 @@ export const dict = {
         logo: "Mağaza Logosu",
         timezone: "Saat Dilimi",
         save: "Değişiklikleri Kaydet",
-        paymentPlaceholder: "Ödeme yöntemi yapılandırması yakında gelecek"
+        paymentPlaceholder: "Ödeme yöntemi yapılandırması yakında gelecek",
       },
       common: {
         success: "Değişiklikler başarıyla kaydedildi",
         error: "Bir hata oluştu",
         confirm: "Onayla",
         cancel: "İptal",
-        delete: "Sil"
-      }
-    }
+        delete: "Sil",
+      },
+
+      inventory: {
+        title: "Envanter",
+        subtitle: "Stok yönetimi ve QR takibi",
+        scanQR: "QR Tara",
+        syncProducts: "Ürünleri Senkronize Et",
+        totalSKUs: "Toplam SKU",
+        inStock: "Stokta Var",
+        lowStock: "Düşük Stok",
+        outOfStock: "Tükendi",
+        stock: "Stok",
+        movementLogs: "Hareket Kayıtları",
+        searchPlaceholder: "SKU veya ürün adıyla ara...",
+        product: "Ürün",
+        sku: "SKU",
+        variant: "Varyant",
+        quantity: "Miktar",
+        status: "Durum",
+        actions: "İşlemler",
+        noRecords: "Envanter kaydı bulunamadı.",
+        loading: "Yükleniyor...",
+        noLogs: "Henüz kayıt yok.",
+        action: "İşlem",
+        change: "Değişim",
+        beforeAfter: "Önce → Sonra",
+        notes: "Notlar",
+        date: "Tarih",
+        addStock: "Stok Ekle",
+        removeStock: "Stok Çıkar",
+        setQuantity: "Miktar Belirle",
+        currentQty: "Mevcut",
+        add: "Ekle",
+        remove: "Çıkar",
+        adjust: "Düzenle",
+        newQuantity: "Yeni Miktar",
+        notesOptional: "Notlar (İsteğe Bağlı)",
+        reasonPlaceholder: "Düzenleme nedeni...",
+        cancel: "İptal",
+        confirm: "Onayla",
+        result: "Sonuç",
+        qrCode: "QR Kodu",
+        downloadQR: "QR İndir",
+        scanQRCode: "QR Kodu Tara",
+        camera: "Kamera",
+        manual: "Manuel",
+        pointCamera: "Kamerayı QR koduna doğrultun",
+        startCamera: "Kamerayı Başlat",
+        typeSkuManually: "SKU'yu manuel girin:",
+        findProduct: "Ürünü Bul",
+        productFound: "Bulundu",
+        productNotFound: "Ürün bulunamadı",
+        cameraError: "Kamera hatası",
+        syncing: "Envanter senkronize ediliyor...",
+        synced: "Envanter senkronize edildi!",
+        viewQR: "QR Kodunu Görüntüle",
+      },
+    },
   },
 };
-
 
 export type TranslationKey = typeof dict.en;

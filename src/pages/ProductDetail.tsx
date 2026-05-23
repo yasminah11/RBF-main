@@ -490,7 +490,7 @@ export default function ProductDetail() {
                 {t.product.relatedTag}
               </span>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 px-2 md:px-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 px-2 md:px-0">
               {related.map((p) => (
                 <ProductCard key={p.id} p={p} />
               ))}

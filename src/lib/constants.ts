@@ -26,25 +26,25 @@ export const MOCK_REVIEWS = [
   {
     id: 1,
     name: "Alexandra V.",
-    text_en: "The craftsmanship is unparalleled. My evening gown felt like a second skin, draped in pure luxury.",
-    text_ar: "الحرفية لا مثيل لها. فستان السهرة الخاص بي كان وكأنه طبقة ثانية من الجلد، مكسواً بالفخامة الخالصة.",
-    text_tr: "İşçilik tek kelimeyle eşsiz. Gece elbisem üzerimde adeta ikinci bir ten gibiydi, saf lüksle sarmalanmış hissettim.",
+    text_en: "The craftsmanship is unparalleled. Stepping into my Royal Brands gown felt like a transformation. The silk draped like a second skin, and the meticulous attention to detail left me breathless. It wasn't just a dress; it was a moment of absolute perfection that I will cherish forever.",
+    text_ar: "الحرفية لا مثيل لها. ارتداء فستان رويال براندز الخاص بي كان بمثابة تحول. انسكب الحرير كطبقة ثانية من الجلد، والاهتمام الدقيق بالتفاصيل تركني بلا أنفاس. لم يكن مجرد فستان؛ لقد كانت لحظة من الكمال المطلق التي سأعتز بها إلى الأبد.",
+    text_tr: "İşçilik tek kelimeyle eşsiz. Royal Brands elbisemi giydiğimde adeta dönüştüğümü hissettim. İpek üzerimde ikinci bir ten gibi duruyordu ve detaylara gösterilen özen beni büyüledi. Bu sadece bir elbise değildi; sonsuza dek değer vereceğim mutlak bir mükemmellik anıydı.",
     rating: 5
   },
   {
     id: 2,
     name: "Leyla Demir",
-    text_en: "A truly royal experience. From the ordering process to the final delivery, everything was exquisite.",
-    text_ar: "تجربة ملكية حقاً. من عملية الطلب وحتى التسليم النهائي، كان كل شيء رائعاً.",
-    text_tr: "Gerçekten asil bir deneyim. Sipariş sürecinden son teslimata kadar her şey mükemmeldi.",
+    text_en: "A truly exquisite experience from start to finish. Finding a couture piece that balances modern elegance with timeless grace is rare. When I wore it to the gala, the room simply paused. The personalized service made me feel like fashion royalty.",
+    text_ar: "تجربة رائعة حقاً من البداية إلى النهاية. من النادر العثور على قطعة كوتور توازن بين الأناقة العصرية والجاذبية الخالدة. عندما ارتديته في الحفل، توقفت الغرفة ببساطة. الخدمة الشخصية جعلتني أشعر وكأنني من ملوك الموضة.",
+    text_tr: "Baştan sona gerçekten zarif bir deneyim. Modern zarafeti zamansız bir incelikle dengeleyen bir couture parçası bulmak nadirdir. Galada giydiğimde herkesin nefesi kesildi. Kişiselleştirilmiş hizmet beni adeta moda kraliyetinin bir parçası gibi hissettirdi.",
     rating: 5
   },
   {
     id: 3,
     name: "Sophia L.",
-    text_en: "Maison Royal has redefined my standard for evening wear. Absolute elegance in every stitch.",
-    text_ar: "لقد أعاد ميزون رويال تعريف معاييري لأزياء السهرة. أناقة مطلقة في كل غرزة.",
-    text_tr: "Maison Royal, abiye giyim standartlarımı yeniden belirledi. Her dikişte mutlak zarafet var.",
+    text_en: "Maison Royal has entirely redefined my expectations of haute couture. The way their silhouettes celebrate the feminine form is nothing short of artistic genius. Absolute elegance in every single stitch—I have never felt more confident and radiant.",
+    text_ar: "لقد أعاد ميزون رويال تعريف توقعاتي للأزياء الراقية (هوت كوتور) بالكامل. الطريقة التي تحتفل بها تصاميمهم بالشكل الأنثوي ليست سوى عبقرية فنية. أناقة مطلقة في كل غرزة - لم أشعر يوماً بمزيد من الثقة والإشراق.",
+    text_tr: "Maison Royal, haute couture beklentilerimi tamamen yeniden tanımladı. Silüetlerinin kadın formunu yüceltiş şekli tam anlamıyla sanatsal bir deha. Her bir dikişte mutlak zarafet—hiçbir zaman bu kadar özgüvenli ve ışıltılı hissetmemiştim.",
     rating: 5
   }
 ];

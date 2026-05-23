@@ -109,14 +109,14 @@ export default function Shop() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-0">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="aspect-[4/5] bg-card/50 animate-pulse rounded-sm" />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-0">
             {products.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
 
