@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Package,
@@ -14,6 +15,7 @@ import {
   TrendingUp,
   TrendingDown,
   Edit3,
+  Keyboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +73,7 @@ const SCAN_BASE_URL = (
 ).replace(/\/+$/, "");
 
 function generateQRUrl(sku: string): string {
-  return `${SCAN_BASE_URL}/scan?sku=${encodeURIComponent(sku)}`;
+  return `${SCAN_BASE_URL}/admin/inventory?sku=${encodeURIComponent(sku)}`;
 }
 
 function StatusBadge({
@@ -112,6 +114,7 @@ function StatusBadge({
 export function InventoryManager() {
   const { locale, t } = useI18n();
   const inv = t.admin.inventory;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const getProductName = (item: InventoryItem) => {
     if (locale === "ar")
@@ -143,6 +146,12 @@ export function InventoryManager() {
   const [adjustNotes, setAdjustNotes] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
+  // Scanner UI States
+  const [scanModalOpen, setScanModalOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<"add" | "remove">("remove");
+  const [scannerInput, setScannerInput] = useState("");
+  const scannerInputRef = useRef<HTMLInputElement>(null);
+
   const fetchInventory = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -168,6 +177,74 @@ export function InventoryManager() {
     fetchInventory();
     fetchLogs();
   }, []);
+
+  // Handle URL parameters for automatic stock update
+  useEffect(() => {
+    const sku = searchParams.get("sku");
+    const action = searchParams.get("action");
+
+    if (sku) {
+      const mode = (action === "add" ? "add" : "remove") as "add" | "remove";
+      handleScannerSubmit(sku, mode);
+      // Clear params after processing
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  const handleScannerSubmit = async (sku: string, mode: "add" | "remove") => {
+    if (!sku) return;
+
+    try {
+      // Find item
+      const { data: item, error: findError } = await supabase
+        .from("inventory")
+        .select(`*, product:products(name_en, name_ar, name_tr, sku)`)
+        .eq("sku", sku)
+        .maybeSingle();
+
+      if (findError) throw findError;
+      if (!item) {
+        toast.error(`${inv.productNotFound}: ${sku}`);
+        return;
+      }
+
+      const change = mode === "add" ? 1 : -1;
+      const newQty = (item.quantity || 0) + change;
+
+      if (newQty < 0) {
+        toast.error(inv.outOfStock);
+        return;
+      }
+
+      // Update
+      const { error: updateError } = await supabase
+        .from("inventory")
+        .update({ quantity: newQty })
+        .eq("id", item.id);
+
+      if (updateError) throw updateError;
+
+      // Log
+      await supabase.from("inventory_logs").insert({
+        inventory_id: item.id,
+        product_id: item.product_id,
+        action_type: mode,
+        quantity_change: change,
+        quantity_before: item.quantity,
+        quantity_after: newQty,
+        notes: "Quick Scan Update",
+      });
+
+      const productName = locale === "ar" ? item.product?.name_ar : locale === "tr" ? item.product?.name_tr : item.product?.name_en;
+      toast.success(`${productName} (${sku}): ${mode === "add" ? "+1" : "-1"} (${newQty})`);
+      
+      fetchInventory();
+      fetchLogs();
+      setScannerInput("");
+    } catch (err: any) {
+      toast.error(err.message || "Error processing scan");
+    }
+  };
 
   const syncInventory = async () => {
     const loadingToast = toast.loading(inv.syncing);
@@ -322,14 +399,63 @@ export function InventoryManager() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={syncInventory}
+            onClick={() => setScanModalOpen(true)}
             className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold gap-2"
+          >
+            <QrCode className="h-4 w-4" />
+            {inv.scanQR}
+          </Button>
+          <Button
+            onClick={syncInventory}
+            variant="outline"
+            className="gap-2"
           >
             <RefreshCw className="h-4 w-4" />
             {inv.syncProducts}
           </Button>
         </div>
       </div>
+
+      {/* Quick Scan Section */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
+           <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-1">
+              <Button
+                variant={scannerMode === "add" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setScannerMode("add")}
+                className={cn("h-8 gap-1 text-[10px] uppercase tracking-widest", scannerMode === "add" && "bg-green-500 hover:bg-green-600")}
+              >
+                <Plus className="h-3 w-3" /> {inv.add}
+              </Button>
+              <Button
+                variant={scannerMode === "remove" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setScannerMode("remove")}
+                className={cn("h-8 gap-1 text-[10px] uppercase tracking-widest", scannerMode === "remove" && "bg-red-500 hover:bg-red-600")}
+              >
+                <Minus className="h-3 w-3" /> {inv.remove}
+              </Button>
+           </div>
+           <div className="relative flex-1">
+             <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             <Input
+                placeholder="Scan QR or type SKU..."
+                className="pl-10 h-10 bg-background border-border"
+                value={scannerInput}
+                onChange={(e) => setScannerInput(e.target.value)}
+                onKeyDown={(e) => {
+                   if (e.key === "Enter") {
+                     handleScannerSubmit(scannerInput, scannerMode);
+                   }
+                }}
+             />
+           </div>
+           <Button onClick={() => handleScannerSubmit(scannerInput, scannerMode)} className="h-10 gap-2">
+             <RefreshCw className="h-4 w-4" /> {inv.findProduct}
+           </Button>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -778,7 +904,7 @@ export function InventoryManager() {
         </DialogContent>
       </Dialog>
 
-      {/* QR Modal */}
+      {/* QR Code Modal (View/Download) */}
       <Dialog open={!!qrModal} onOpenChange={() => setQrModal(null)}>
         <DialogContent
           className="bg-card border-border max-w-sm"
@@ -811,6 +937,72 @@ export function InventoryManager() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* External Scanner Focus Modal */}
+      <Dialog 
+        open={scanModalOpen} 
+        onOpenChange={setScanModalOpen}
+      >
+        <DialogContent className="bg-card border-border max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-primary">
+              {inv.scanQRCode}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 pt-4">
+             <div className="flex justify-center gap-4">
+                <Button
+                  variant={scannerMode === "add" ? "default" : "outline"}
+                  onClick={() => setScannerMode("add")}
+                  className={cn("flex-1 h-12 gap-2", scannerMode === "add" && "bg-green-500 hover:bg-green-600 border-none")}
+                >
+                  <Plus className="h-5 w-5" /> {inv.addStock}
+                </Button>
+                <Button
+                  variant={scannerMode === "remove" ? "default" : "outline"}
+                  onClick={() => setScannerMode("remove")}
+                  className={cn("flex-1 h-12 gap-2", scannerMode === "remove" && "bg-red-500 hover:bg-red-600 border-none")}
+                >
+                  <Minus className="h-5 w-5" /> {inv.removeStock}
+                </Button>
+             </div>
+
+             <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                  {inv.manual} / {inv.camera}
+                </Label>
+                <div className="relative">
+                   <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                   <Input
+                      autoFocus
+                      ref={scannerInputRef}
+                      placeholder="Waiting for scanner input..."
+                      className="pl-10 h-12 text-lg font-mono bg-background border-border"
+                      value={scannerInput}
+                      onChange={(e) => setScannerInput(e.target.value)}
+                      onKeyDown={(e) => {
+                         if (e.key === "Enter") {
+                           handleScannerSubmit(scannerInput, scannerMode);
+                         }
+                      }}
+                   />
+                </div>
+                <p className="text-[10px] text-center text-muted-foreground italic">
+                  Connect your scanner and scan a QR code. Input will be processed automatically.
+                </p>
+             </div>
+
+             <Button 
+                variant="ghost" 
+                className="w-full text-muted-foreground"
+                onClick={() => setScanModalOpen(false)}
+             >
+               {inv.cancel}
+             </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
