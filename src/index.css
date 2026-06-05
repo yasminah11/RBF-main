@@ -72,11 +72,12 @@
     }
   }
   html[lang="ar"] {
-    font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     line-height: 1.8;
   }
   html[lang="ar"] body {
     text-align: right;
+    font-weight: 300;
   }
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
@@ -115,9 +116,12 @@
   html[lang="ar"] h3,
   html[lang="ar"] h4,
   html[lang="ar"] h5,
-  html[lang="ar"] .font-display {
-    font-family: "IBM Plex Sans Arabic", sans-serif;
-    font-weight: 600;
+  html[lang="ar"] .font-display,
+  html[lang="ar"] .nav-link,
+  html[lang="ar"] button,
+  html[lang="ar"] .button {
+    font-family: "Alexandria", sans-serif;
+    font-weight: 350;
     letter-spacing: 0;
   }
 }

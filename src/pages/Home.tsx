@@ -313,9 +313,8 @@ export default function Home() {
     if (!newsletterEmail) return;
     setNewsletterLoading(true);
     await new Promise((r) => setTimeout(r, 800));
-    toast.success("Welcome to Royal Brands Fashion", {
-      description:
-        "You'll be the first to know about new arrivals & exclusive offers.",
+    toast.success(t.newsletter.success, {
+      description: t.newsletter.successDesc,
     });
     setNewsletterEmail("");
     setNewsletterLoading(false);
@@ -533,16 +532,13 @@ export default function Home() {
             <div className="flex flex-col text-center lg:text-start px-4 lg:px-0 lg:border-r lg:border-border/10 lg:pr-16">
               <Reveal>
                 <p className="text-[10px] uppercase tracking-[0.5em] text-primary mb-4 font-normal">
-                  Private Fashion Club
+                  {t.newsletter.tag}
                 </p>
                 <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-cream mb-6 leading-tight italic">
-                  Join the Inner Circle
+                  {t.newsletter.title}
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground mb-10 leading-relaxed font-light">
-                  Enter a world of unparalleled luxury. Subscribe to unlock
-                  private VIP collections, exclusive early access to our
-                  seasonal archives, and curated styling secrets from our
-                  atelier. Only for the distinguished few.
+                  {t.newsletter.description}
                 </p>
               </Reveal>
 
@@ -555,7 +551,7 @@ export default function Home() {
                     type="email"
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
-                    placeholder="Your email address"
+                    placeholder={t.newsletter.placeholder}
                     required
                     className="flex-1 bg-card/60 backdrop-blur-sm px-5 py-4 text-sm text-cream placeholder:text-muted-foreground/50 outline-none focus:bg-card/80 transition-colors"
                   />
@@ -565,17 +561,17 @@ export default function Home() {
                     className="group flex items-center justify-center gap-2 bg-gradient-gold bg-[length:200%_auto] hover:bg-right text-primary-foreground px-6 py-4 text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-500 hover:shadow-gold-glow disabled:opacity-60 whitespace-nowrap"
                   >
                     {newsletterLoading ? (
-                      <span className="animate-pulse">...</span>
+                      <span className="animate-pulse">{t.newsletter.buttonLoading}</span>
                     ) : (
                       <>
-                        Request Access{" "}
+                        {t.newsletter.button}{" "}
                         <Send className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                       </>
                     )}
                   </button>
                 </form>
                 <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mt-4 text-center lg:text-start">
-                  Your exclusivity is guaranteed. Unsubscribe anytime.
+                  {t.newsletter.note}
                 </p>
               </Reveal>
             </div>

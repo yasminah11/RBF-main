@@ -7,6 +7,7 @@ type Ctx = {
   t: typeof dict.en;
   dir: "ltr" | "rtl";
   formatPrice: (n: number) => string;
+  formatNumber: (n: number) => string;
 };
 
 const I18nCtx = createContext<Ctx | null>(null);
@@ -32,12 +33,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     t: dict[locale],
     dir,
     formatPrice: (n: number) => {
-      const fmt = new Intl.NumberFormat(locale === "ar" ? "ar-SA" : locale === "tr" ? "tr-TR" : "en-US", {
+      // Force Latin numerals even in Arabic locale
+      const formatLocale = locale === "ar" ? "ar-SA-u-nu-latn" : locale === "tr" ? "tr-TR" : "en-US";
+      const fmt = new Intl.NumberFormat(formatLocale, {
         style: "currency",
         currency: "TRY",
         maximumFractionDigits: 0,
       });
       return fmt.format(n);
+    },
+    formatNumber: (n: number) => {
+      return new Intl.NumberFormat("en-US").format(n);
     },
   }), [locale, dir]);
 

@@ -38,17 +38,35 @@ export default function ProductDetail() {
   const wishlistItems = useWishlist();
   const isWishlisted = p ? wishlist.has(p.id) : false;
 
+  // دالة تحسب الـ stock للون والمقاس المختارين
+  const getAvailableStock = (color: any, size: string) => {
+    const sizeEntry = color?.color_size_stock?.find(
+      (s: any) => s.size_label === size,
+    );
+    return sizeEntry?.quantity ?? 0;
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
+        // تعديل الـ query لجلب المخزون بناءً على المقاس واللون
         const { data } = await supabase
           .from("products")
           .select(
-            "*, product_sizes(*), product_images(*), product_color_variants(*)",
+            `
+            *, 
+            product_sizes(*), 
+            product_images(*), 
+            product_color_variants(
+              *,
+              color_size_stock(size_label, quantity)
+            )
+          `,
           )
           .eq("slug", slug)
           .maybeSingle();
+
         if (data) {
           setProduct(data);
 
@@ -102,10 +120,29 @@ export default function ProductDetail() {
     })();
   }, [slug]);
 
+  // تصغير المقاس المختار إذا قام المستخدم بتغيير اللون إلى لون لا يتوفر فيه هذا المقاس
+  useEffect(() => {
+    if (selectedSize && selectedColor) {
+      const currentStock = getAvailableStock(selectedColor, selectedSize);
+      if (currentStock === 0) {
+        setSelectedSize("");
+      }
+    }
+  }, [selectedColor]);
+
   const handleAdd = () => {
     if (!selectedSize) {
       toast.error(t.product.size, {
         description: "Please select a size first.",
+      });
+      return;
+    }
+
+    // التحقق من أن الكمية المطلوبة لا تتخطى المخزون المتاح
+    const availableStock = getAvailableStock(selectedColor, selectedSize);
+    if (qty > availableStock) {
+      toast.error("Out of stock", {
+        description: `Only ${availableStock} items available for this size/color.`,
       });
       return;
     }
@@ -186,6 +223,18 @@ export default function ProductDetail() {
         (a: any, b: any) => a.position - b.position,
       )
     : [];
+
+  // حساب إذا كان المنتج بالكامل نفد مخزونه من كل الألوان والمقاسات
+  const isAllStockOut =
+    colorVariants.length > 0 &&
+    colorVariants.every((c: any) => {
+      const totalColorStock =
+        c.color_size_stock?.reduce(
+          (acc: number, curr: any) => acc + (curr.quantity || 0),
+          0,
+        ) || 0;
+      return totalColorStock === 0;
+    });
 
   const images = p.product_images
     ? [...p.product_images]
@@ -293,12 +342,11 @@ export default function ProductDetail() {
                     {t.common.new}
                   </span>
                 )}
-                {colorVariants.length > 0 &&
-                  colorVariants.every((c: any) => c.stock_quantity === 0) && (
-                    <span className="text-xs sm:text-[9px] uppercase tracking-[0.2em] font-bold text-destructive px-3 py-1 bg-destructive/10 border border-destructive/20">
-                      Sold Out
-                    </span>
-                  )}
+                {isAllStockOut && (
+                  <span className="text-xs sm:text-[9px] uppercase tracking-[0.2em] font-bold text-destructive px-3 py-1 bg-destructive/10 border border-destructive/20">
+                    Sold Out
+                  </span>
+                )}
                 <span className="text-xs sm:text-[10px] uppercase tracking-widest text-muted-foreground">
                   SKU: {p.sku}
                 </span>
@@ -345,31 +393,46 @@ export default function ProductDetail() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {colorVariants.map((color: any) => (
-                    <button
-                      key={color.id}
-                      onClick={() => handleColorSelect(color)}
-                      title={localizedField(color, "name", locale)}
-                      disabled={!color.is_available}
-                      className={cn(
-                        "w-9 h-9 rounded-full border-2 transition-all duration-300 relative",
-                        selectedColor?.id === color.id
-                          ? "border-primary scale-110 shadow-gold"
-                          : "border-border/30 hover:border-primary/50 hover:scale-105",
-                        !color.is_available && "opacity-40 cursor-not-allowed",
-                      )}
-                      style={{ backgroundColor: color.hex_color || "#000000" }}
-                    >
-                      {selectedColor?.id === color.id && (
-                        <span className="absolute inset-0 rounded-full ring-2 ring-primary ring-offset-2 ring-offset-background" />
-                      )}
-                    </button>
-                  ))}
+                  {colorVariants.map((color: any) => {
+                    // حساب إجمالي الـ stock لكل لون على حدة لمعرفة توفره
+                    const totalColorStock =
+                      color.color_size_stock?.reduce(
+                        (acc: number, curr: any) => acc + (curr.quantity || 0),
+                        0,
+                      ) || 0;
+                    const isColorAvailable =
+                      color.is_available && totalColorStock > 0;
+
+                    return (
+                      <button
+                        key={color.id}
+                        onClick={() => handleColorSelect(color)}
+                        title={localizedField(color, "name", locale)}
+                        disabled={!isColorAvailable}
+                        className={cn(
+                          "w-9 h-9 rounded-full border-2 transition-all duration-300 relative",
+                          selectedColor?.id === color.id
+                            ? "border-primary scale-110 shadow-gold"
+                            : "border-border/30 hover:border-primary/50 hover:scale-105",
+                          !isColorAvailable &&
+                            "opacity-40 cursor-not-allowed line-through",
+                        )}
+                        style={{
+                          backgroundColor: color.hex_color || "#000000",
+                        }}
+                      >
+                        {selectedColor?.id === color.id && (
+                          <span className="absolute inset-0 rounded-full ring-2 ring-primary ring-offset-2 ring-offset-background" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             <div className="h-px bg-border/10 w-full" />
+
             {/* Sizes */}
             <div className="space-y-5">
               <div className="flex items-center justify-between">
@@ -381,20 +444,26 @@ export default function ProductDetail() {
                 </button>
               </div>
               <div className="flex flex-wrap gap-3">
-                {sizes.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className={cn(
-                      "w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border text-sm sm:text-[11px] md:text-xs tracking-[0.1em] transition-all duration-300 font-medium",
-                      selectedSize === s
-                        ? "border-primary bg-primary text-primary-foreground shadow-gold"
-                        : "border-border/20 text-foreground/60 hover:border-primary/40 hover:text-cream",
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {sizes.map((s) => {
+                  const stock = getAvailableStock(selectedColor, s);
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedSize(s)}
+                      disabled={stock === 0}
+                      className={cn(
+                        "w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border text-sm sm:text-[11px] md:text-xs tracking-[0.1em] transition-all duration-300 font-medium",
+                        selectedSize === s
+                          ? "border-primary bg-primary text-primary-foreground shadow-gold"
+                          : "border-border/20 text-foreground/60 hover:border-primary/40 hover:text-cream",
+                        stock === 0 &&
+                          "opacity-40 cursor-not-allowed line-through",
+                      )}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -424,11 +493,19 @@ export default function ProductDetail() {
               {/* Add to Cart Button - Centered fixed width on mobile */}
               <button
                 onClick={handleAdd}
-                className="group relative inline-flex items-center justify-center gap-4 bg-primary text-primary-foreground w-fit mx-auto sm:w-auto px-12 sm:px-10 py-3 sm:py-5 text-sm sm:text-[10px] uppercase tracking-[0.3em] font-bold overflow-hidden transition-all hover:shadow-gold flex-1"
+                disabled={
+                  isAllStockOut ||
+                  (selectedSize
+                    ? getAvailableStock(selectedColor, selectedSize) === 0
+                    : false)
+                }
+                className="group relative inline-flex items-center justify-center gap-4 bg-primary text-primary-foreground w-fit mx-auto sm:w-auto px-12 sm:px-10 py-3 sm:py-5 text-sm sm:text-[10px] uppercase tracking-[0.3em] font-bold overflow-hidden transition-all hover:shadow-gold flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3 relative z-10">
                   <ShoppingBag className="h-5 w-5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">{t.product.addToCart}</span>
+                  <span className="truncate">
+                    {isAllStockOut ? "Sold Out" : t.product.addToCart}
+                  </span>
                 </div>
                 <ArrowRight className="h-5 w-5 sm:hidden relative z-10" />
                 <div className="absolute inset-0 bg-primary-glow translate-y-full transition-transform group-hover:translate-y-0 duration-500" />

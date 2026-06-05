@@ -334,13 +334,13 @@ export function Header() {
         {/* Desktop Nav */}
         <nav
           className={cn(
-            "hidden lg:block border-t border-border/5 transition-all duration-700 ease-luxury mt-3",
+            "hidden lg:block border-t border-border/5 transition-all duration-700 ease-luxury mt-1",
             isScrolled || !isHomePage
               ? "max-h-0 opacity-0 overflow-hidden pointer-events-none mt-0"
               : "max-h-20 opacity-100",
           )}
         >
-          <div className="container-luxury flex items-center justify-center gap-16 py-4">
+          <div className="container-luxury flex items-center justify-center gap-16 py-3">
             <NavLink to="/shop" className="nav-link text-sm">
               {t.nav.shop}
             </NavLink>

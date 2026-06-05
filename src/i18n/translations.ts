@@ -146,6 +146,17 @@ export const dict = {
       selectLanguage: "Select Language",
       account: "Account",
     },
+    newsletter: {
+      tag: "Private Fashion Club",
+      title: "Join the Inner Circle",
+      description: "Enter a world of unparalleled luxury. Subscribe to unlock private VIP collections, exclusive early access to our seasonal archives, and curated styling secrets from our atelier. Only for the distinguished few.",
+      placeholder: "Your email address",
+      button: "Request Access",
+      buttonLoading: "...",
+      note: "Your exclusivity is guaranteed. Unsubscribe anytime.",
+      success: "Welcome to Royal Brands Fashion",
+      successDesc: "You'll be the first to know about new arrivals & exclusive offers.",
+    },
     contactInfo: {
       title: "Contact Us",
       subtitle:
@@ -560,6 +571,15 @@ export const dict = {
       selectLanguage: "اخter اللغة",
       account: "الحساب",
     },
+    newsletter: {
+      tag: "نادي الأزياء الخاص",
+      title: "انضمي إلى عالمنا الخاص",
+      description: "ادخلي عالماً من الفخامة التي لا تضاهى. اشتركي لفتح مجموعات VIP الخاصة، والوصول المبكر الحصري إلى أرشيفنا الموسمي، وأسرار التنسيق المنسقة من مشغلنا. فقط للنخبة المتميزة.",
+      placeholder: "عنوان بريدك الإلكتروني",
+      button: "طلب الدخول",
+      buttonLoading: "...",
+      note: "خصوصيتك مضمونة. يمكنك إلغاء الاشتراك في أي وقت.",
+    },
     contactInfo: {
       title: "اتصل بنا",
       subtitle: "نحن هنا لمساعدتكِ في أي استفسارات أو تقديم نصائح حول الأناقة.",
@@ -970,6 +990,15 @@ export const dict = {
       search: "Ara",
       selectLanguage: "Dil Seçin",
       account: "Hesap",
+    },
+    newsletter: {
+      tag: "Özel Moda Kulübü",
+      title: "İç Çevreye Katılın",
+      description: "Eşsiz bir lüks dünyasına girin. Özel VIP koleksiyonların kilidini açmak, sezonluk arşivlerimize özel erken erişim sağlamak ve atölyemizden küratörlüğünde stil sırlarını keşfetmek için abone olun. Sadece seçkin azınlık için.",
+      placeholder: "E-posta adresiniz",
+      button: "Erişim Talebi",
+      buttonLoading: "...",
+      note: "Ayrıcalığınız garanti altındadır. İstediğiniz zaman abonelikten çıkabilirsiniz.",
     },
     contactInfo: {
       title: "Bize Ulaşın",

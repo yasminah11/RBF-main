@@ -71,6 +71,7 @@ interface ColorVariant {
   name_tr: string;
   hex: string;
   stock: number;
+  sizeStock: Record<string, number>; // { "38": 10, "40": 5, "42": 0 }
   images: string[];
   is_active: boolean;
   is_main: boolean;
@@ -184,7 +185,7 @@ export function ProductsManager() {
 
   // --- Handlers ---
 
-  const handleOpenModal = (product?: any) => {
+  const handleOpenModal = async (product?: any) => {
     if (product) {
       const sortedSizes = product.product_sizes
         ? [...product.product_sizes].sort(
@@ -198,15 +199,46 @@ export function ProductsManager() {
         ? []
         : sortedSizes.map((s: any) => s.size_label);
 
+      // ✅ جيب color_size_stock لكل color variant
+      const rawColors: ColorVariant[] = await Promise.all(
+        (product.product_color_variants || []).map(async (cv: any) => {
+          const { data: stocks } = await supabase
+            .from("color_size_stock")
+            .select("size_label, quantity")
+            .eq("color_variant_id", cv.id);
+
+          const sizeStock: Record<string, number> = {};
+          (stocks || []).forEach((s: any) => {
+            sizeStock[s.size_label] = s.quantity;
+          });
+
+          return {
+            id: cv.id,
+            name_en: cv.name_en || "",
+            name_ar: cv.name_ar || "",
+            name_tr: cv.name_tr || "",
+            hex: cv.hex_color || "#000000",
+            stock: cv.stock_quantity || 0,
+            sizeStock,
+            images: (product.product_images || [])
+              .filter((img: any) => img.color_variant_id === cv.id)
+              .sort((a: any, b: any) => a.position - b.position)
+              .map((img: any) => img.url),
+            is_active: cv.is_available ?? true,
+            is_main: cv.is_main ?? false,
+          };
+        }),
+      );
+
       setFormData({
         ...DEFAULT_FORM_STATE,
         ...product,
         tags: product.tags?.join(", ") || "",
-        colors: product.colors || [],
+        colors: rawColors,
         sizes: mappedSizes,
         has_one_size: hasOneSize,
-        is_best_seller: product.is_best_seller || false, // ✅ NEW
-        is_new_arrival: product.is_new_arrival || false, // ✅ NEW
+        is_best_seller: product.is_best_seller || false,
+        is_new_arrival: product.is_new_arrival || false,
       });
     } else {
       setFormData(DEFAULT_FORM_STATE);
@@ -254,8 +286,8 @@ export function ProductsManager() {
         requires_shipping: formData.requires_shipping,
         status: status,
         featured: formData.is_featured,
-        is_best_seller: formData.is_best_seller, // ✅ NEW
-        is_new_arrival: formData.is_new_arrival, // ✅ NEW
+        is_best_seller: formData.is_best_seller,
+        is_new_arrival: formData.is_new_arrival,
         track_inventory: formData.track_inventory,
         low_stock_threshold: formData.low_stock_threshold,
         tags: formData.tags
@@ -273,6 +305,21 @@ export function ProductsManager() {
           .from("product_images")
           .delete()
           .eq("product_id", formData.id);
+
+        // ✅ امسح color_size_stock القديمة قبل ما نمسح الـ variants
+        const { data: oldVariants } = await supabase
+          .from("product_color_variants")
+          .select("id")
+          .eq("product_id", formData.id);
+
+        if (oldVariants && oldVariants.length > 0) {
+          const oldVariantIds = oldVariants.map((v: any) => v.id);
+          await supabase
+            .from("color_size_stock")
+            .delete()
+            .in("color_variant_id", oldVariantIds);
+        }
+
         await supabase
           .from("product_color_variants")
           .delete()
@@ -313,9 +360,16 @@ export function ProductsManager() {
         if (imgError) throw imgError;
       }
 
-      // 2. Handle Color Variants and their images
+      // 2. Handle Color Variants, their images, and size stock
       for (let i = 0; i < formData.colors.length; i++) {
         const color = formData.colors[i];
+
+        // حساب الكليه من sizeStock
+        const totalFromSizes = Object.values(color.sizeStock || {}).reduce(
+          (sum, qty) => sum + qty,
+          0,
+        );
+
         const { data: variantData, error: varError } = await supabase
           .from("product_color_variants")
           .insert({
@@ -324,7 +378,11 @@ export function ProductsManager() {
             name_ar: color.name_ar,
             name_tr: color.name_tr,
             hex_color: color.hex,
-            stock_quantity: color.stock,
+            // ✅ stock_quantity = مجموع الـ sizeStock لو موجودين، غير كده الـ stock العادي
+            stock_quantity:
+              Object.keys(color.sizeStock || {}).length > 0
+                ? totalFromSizes
+                : color.stock,
             is_available: color.is_active,
             is_main: color.is_main,
             position: i,
@@ -334,6 +392,24 @@ export function ProductsManager() {
 
         if (varError) throw varError;
 
+        // ✅ احفظ color_size_stock لو فيه مقاسات
+        if (color.sizeStock && Object.keys(color.sizeStock).length > 0) {
+          const sizeStockRecords = Object.entries(color.sizeStock).map(
+            ([size_label, quantity]) => ({
+              color_variant_id: variantData.id,
+              size_label,
+              quantity: quantity || 0,
+            }),
+          );
+
+          const { error: sizeStockError } = await supabase
+            .from("color_size_stock")
+            .insert(sizeStockRecords);
+
+          if (sizeStockError) throw sizeStockError;
+        }
+
+        // احفظ صور الـ color
         const colorImageRecords = [];
         for (let j = 0; j < color.images.length; j++) {
           const imageData = color.images[j];
@@ -361,8 +437,10 @@ export function ProductsManager() {
       }
 
       // 3. Handle Sizes
-      if (formData.sizes.length > 0) {
-        const sizeRecords = formData.sizes.map((size, idx) => ({
+      const sizesToSave = formData.has_one_size ? ["One Size"] : formData.sizes;
+
+      if (sizesToSave.length > 0) {
+        const sizeRecords = sizesToSave.map((size, idx) => ({
           product_id: productId,
           size_label: size,
           position: idx,
@@ -445,9 +523,10 @@ export function ProductsManager() {
       name_ar: "",
       name_tr: "",
       hex: "#000000",
-      stock: 0,
       images: [],
       is_active: true,
+      stock: 0,
+      sizeStock: {},
       is_main: formData.colors.length === 0,
     };
     handleFormChange({ colors: [...formData.colors, newColor] });
@@ -685,7 +764,6 @@ export function ProductsManager() {
                     {formatPrice(product.price)}
                   </td>
 
-                  {/* ✅ NEW: Labels column */}
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {product.is_best_seller && (
@@ -795,7 +873,6 @@ export function ProductsManager() {
                   <p className="text-sm font-bold text-primary mt-1">
                     {formatPrice(product.price)}
                   </p>
-                  {/* ✅ NEW: Labels on mobile */}
                   <div className="flex gap-1 mt-1 flex-wrap">
                     {product.is_best_seller && (
                       <span className="text-[8px] uppercase tracking-widest px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 font-bold">
@@ -1397,23 +1474,74 @@ export function ProductsManager() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                            <div className="space-y-1.5">
-                              <Label className="text-[8px] uppercase font-bold text-muted-foreground">
-                                {t.admin.products.modal.stock}
-                              </Label>
-                              <Input
-                                type="number"
-                                value={color.stock}
-                                onChange={(e) =>
-                                  updateColor(color.id, {
-                                    stock: Number(e.target.value),
-                                  })
-                                }
-                                className="h-8 text-xs bg-muted/30"
-                              />
+                          {/* ✅ Stock per Size Grid — بيظهر لو فيه مقاسات محددة */}
+                          {formData.track_inventory && (
+                            <div className="space-y-2 pt-2 border-t border-border/40">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[8px] uppercase font-bold text-muted-foreground">
+                                  Stock per Size
+                                </Label>
+                                {Object.values(color.sizeStock || {}).length >
+                                  0 && (
+                                  <span className="text-[9px] text-muted-foreground">
+                                    Total:{" "}
+                                    <span className="font-bold text-primary">
+                                      {Object.values(
+                                        color.sizeStock || {},
+                                      ).reduce(
+                                        (sum, qty) => sum + (qty || 0),
+                                        0,
+                                      )}
+                                    </span>{" "}
+                                    pcs
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* لو مفيش مقاسات متحددة بعد */}
+                              {!formData.has_one_size &&
+                              formData.sizes.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground italic py-1">
+                                  Add sizes first in Inventory & Sizes section,
+                                  then set stock per size here.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                                  {(formData.has_one_size
+                                    ? ["One Size"]
+                                    : [...formData.sizes].sort(
+                                        (a, b) => Number(a) - Number(b),
+                                      )
+                                  ).map((size) => (
+                                    <div key={size} className="space-y-1">
+                                      <Label className="text-[9px] text-center block text-muted-foreground font-bold">
+                                        {size}
+                                      </Label>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        value={color.sizeStock?.[size] ?? ""}
+                                        placeholder="0"
+                                        onChange={(e) =>
+                                          updateColor(color.id, {
+                                            sizeStock: {
+                                              ...color.sizeStock,
+                                              [size]:
+                                                Number(e.target.value) || 0,
+                                            },
+                                          })
+                                        }
+                                        className="h-8 text-xs bg-muted/30 text-center"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-3 pt-6">
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div className="flex items-center gap-3">
                               <Switch
                                 checked={color.is_active}
                                 onCheckedChange={(val) =>
@@ -1424,7 +1552,7 @@ export function ProductsManager() {
                                 Available
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 pt-6">
+                            <div className="flex items-center gap-3">
                               <Checkbox
                                 checked={color.is_main}
                                 onCheckedChange={(val) =>
@@ -1776,7 +1904,7 @@ export function ProductsManager() {
                     />
                   </div>
 
-                  {/* ✅ NEW: Best Seller Toggle */}
+                  {/* Best Seller Toggle */}
                   <div className="flex items-center justify-between p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-bold uppercase tracking-widest text-yellow-500">
@@ -1794,7 +1922,7 @@ export function ProductsManager() {
                     />
                   </div>
 
-                  {/* ✅ NEW: New Arrival Toggle */}
+                  {/* New Arrival Toggle */}
                   <div className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/10">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-bold uppercase tracking-widest">

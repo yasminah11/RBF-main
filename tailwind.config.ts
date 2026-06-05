@@ -10,7 +10,7 @@ export default {
       fontFamily: {
         display: ["'Cormorant Garamond'", "serif"],
         sans: ["Inter", "Jost", "system-ui", "sans-serif"],
-        arabic: ["'IBM Plex Sans Arabic'", "system-ui", "sans-serif"],
+        arabic: ["'Alexandria'", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

@@ -34,10 +34,12 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nContext";
 import QRCode from "qrcode";
 
+// ✅ إضافة size_label للـ interface
 interface InventoryItem {
   id: string;
   product_id: string;
   color_variant_id: string | null;
+  size_label: string | null;
   sku: string;
   quantity: number;
   low_stock_threshold: number;
@@ -62,10 +64,18 @@ interface InventoryLog {
   product?: { name_en: string; name_ar: string; name_tr: string };
 }
 
-function generateSKU(productSku: string, suffix?: string): string {
+function generateSKU(
+  productSku: string,
+  colorSuffix?: string,
+  sizeSuffix?: string,
+): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const base = productSku || "RB";
-  return suffix ? `${base}-${suffix}-${timestamp}` : `${base}-${timestamp}`;
+  // ✅ SKU الجديد: BASE-COLOR-SIZE-TIMESTAMP
+  if (colorSuffix && sizeSuffix)
+    return `${base}-${colorSuffix}-${sizeSuffix}-${timestamp}`;
+  if (colorSuffix) return `${base}-${colorSuffix}-${timestamp}`;
+  return `${base}-${timestamp}`;
 }
 
 const SCAN_BASE_URL = (
@@ -136,7 +146,9 @@ export function InventoryManager() {
   const [logs, setLogs] = useState<InventoryLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"inventory" | "logs">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "logs" | "logs">(
+    "inventory",
+  );
   const [adjustModal, setAdjustModal] = useState<InventoryItem | null>(null);
   const [qrModal, setQrModal] = useState<InventoryItem | null>(null);
   const [adjustType, setAdjustType] = useState<"add" | "remove" | "adjust">(
@@ -186,7 +198,6 @@ export function InventoryManager() {
     if (sku) {
       const mode = (action === "add" ? "add" : "remove") as "add" | "remove";
       handleScannerSubmit(sku, mode);
-      // Clear params after processing
       setSearchParams({}, { replace: true });
     }
   }, [searchParams]);
@@ -195,7 +206,6 @@ export function InventoryManager() {
     if (!sku) return;
 
     try {
-      // Find item
       const { data: item, error: findError } = await supabase
         .from("inventory")
         .select(`*, product:products(name_en, name_ar, name_tr, sku)`)
@@ -216,7 +226,6 @@ export function InventoryManager() {
         return;
       }
 
-      // Update
       const { error: updateError } = await supabase
         .from("inventory")
         .update({ quantity: newQty })
@@ -224,7 +233,6 @@ export function InventoryManager() {
 
       if (updateError) throw updateError;
 
-      // Log
       await supabase.from("inventory_logs").insert({
         inventory_id: item.id,
         product_id: item.product_id,
@@ -235,9 +243,19 @@ export function InventoryManager() {
         notes: "Quick Scan Update",
       });
 
-      const productName = locale === "ar" ? item.product?.name_ar : locale === "tr" ? item.product?.name_tr : item.product?.name_en;
-      toast.success(`${productName} (${sku}): ${mode === "add" ? "+1" : "-1"} (${newQty})`);
-      
+      const productName =
+        locale === "ar"
+          ? item.product?.name_ar
+          : locale === "tr"
+            ? item.product?.name_tr
+            : item.product?.name_en;
+
+      // ✅ الـ toast يوضح اللون والمقاس لو موجودين
+      const sizeInfo = item.size_label ? ` · Size ${item.size_label}` : "";
+      toast.success(
+        `${productName}${sizeInfo} (${sku}): ${mode === "add" ? "+1" : "-1"} → ${newQty}`,
+      );
+
       fetchInventory();
       fetchLogs();
       setScannerInput("");
@@ -246,50 +264,113 @@ export function InventoryManager() {
     }
   };
 
+  // ✅ syncInventory المعدّل يعمل المزامنة والتحديث في حال تغيرت الـ quantity
   const syncInventory = async () => {
     const loadingToast = toast.loading(inv.syncing);
     try {
-      const { data: products } = await supabase
-        .from("products")
-        .select("id, sku, product_color_variants(id, name_en, stock_quantity)");
+      const { data: products } = await supabase.from("products").select(
+        `id, sku,
+         product_color_variants(
+           id, name_en,
+           color_size_stock(size_label, quantity)
+         )`,
+      );
+
       if (!products) return;
+
       for (const product of products) {
         const variants = (product as any).product_color_variants || [];
+
         if (variants.length > 0) {
           for (const variant of variants) {
-            const { data: existing } = await supabase
-              .from("inventory")
-              .select("id")
-              .eq("product_id", product.id)
-              .eq("color_variant_id", variant.id)
-              .maybeSingle();
-            if (!existing) {
-              const sku = generateSKU(
-                product.sku,
-                variant.name_en.slice(0, 3).toUpperCase(),
-              );
-              const qrData = generateQRUrl(sku);
-              const qrUrl = await QRCode.toDataURL(qrData, {
-                width: 300,
-                margin: 2,
-              });
+            const sizeStocks: { size_label: string; quantity: number }[] =
+              variant.color_size_stock || [];
 
-              await supabase.from("inventory").insert({
-                product_id: product.id,
-                color_variant_id: variant.id,
-                sku,
-                quantity: variant.stock_quantity ?? 0,
-                qr_code: qrUrl,
-              });
+            if (sizeStocks.length > 0) {
+              // ✅ عمل row لكل لون × مقاس
+              for (const sizeEntry of sizeStocks) {
+                const { data: existing } = await supabase
+                  .from("inventory")
+                  .select("id")
+                  .eq("product_id", product.id)
+                  .eq("color_variant_id", variant.id)
+                  .eq("size_label", sizeEntry.size_label)
+                  .maybeSingle();
+
+                if (!existing) {
+                  const colorCode = variant.name_en
+                    .slice(0, 3)
+                    .toUpperCase()
+                    .replace(/\s/g, "");
+                  const sizeCode = String(sizeEntry.size_label).replace(
+                    /\s/g,
+                    "",
+                  );
+                  const sku = generateSKU(product.sku, colorCode, sizeCode);
+                  const qrData = generateQRUrl(sku);
+                  const qrUrl = await QRCode.toDataURL(qrData, {
+                    width: 300,
+                    margin: 2,
+                  });
+
+                  await supabase.from("inventory").insert({
+                    product_id: product.id,
+                    color_variant_id: variant.id,
+                    size_label: sizeEntry.size_label,
+                    sku,
+                    quantity: sizeEntry.quantity ?? 0,
+                    qr_code: qrUrl,
+                  });
+                } else {
+                  // ✅ حل الـ Edge Case: تحديث الكمية لو تغيرت في منتج موجود بالفعل
+                  await supabase
+                    .from("inventory")
+                    .update({ quantity: sizeEntry.quantity ?? 0 })
+                    .eq("id", existing.id);
+                }
+              }
+            } else {
+              // لون بدون مقاسات محددة — row واحد للون
+              const { data: existing } = await supabase
+                .from("inventory")
+                .select("id")
+                .eq("product_id", product.id)
+                .eq("color_variant_id", variant.id)
+                .is("size_label", null)
+                .maybeSingle();
+
+              if (!existing) {
+                const colorCode = variant.name_en
+                  .slice(0, 3)
+                  .toUpperCase()
+                  .replace(/\s/g, "");
+                const sku = generateSKU(product.sku, colorCode);
+                const qrData = generateQRUrl(sku);
+                const qrUrl = await QRCode.toDataURL(qrData, {
+                  width: 300,
+                  margin: 2,
+                });
+
+                await supabase.from("inventory").insert({
+                  product_id: product.id,
+                  color_variant_id: variant.id,
+                  size_label: null,
+                  sku,
+                  quantity: 0,
+                  qr_code: qrUrl,
+                });
+              }
             }
           }
         } else {
+          // منتج بدون ألوان
           const { data: existing } = await supabase
             .from("inventory")
             .select("id")
             .eq("product_id", product.id)
             .is("color_variant_id", null)
             .maybeSingle();
+
           if (!existing) {
             const sku = generateSKU(product.sku);
             const qrData = generateQRUrl(sku);
@@ -297,9 +378,11 @@ export function InventoryManager() {
               width: 300,
               margin: 2,
             });
+
             await supabase.from("inventory").insert({
               product_id: product.id,
               color_variant_id: null,
+              size_label: null,
               sku,
               quantity: 0,
               qr_code: qrUrl,
@@ -307,6 +390,7 @@ export function InventoryManager() {
           }
         }
       }
+
       toast.dismiss(loadingToast);
       toast.success(inv.synced);
       fetchInventory();
@@ -329,6 +413,7 @@ export function InventoryManager() {
       .from("inventory")
       .update({ quantity: newQty })
       .eq("id", item.id);
+
     if (error) {
       toast.error(error.message);
       return;
@@ -343,6 +428,7 @@ export function InventoryManager() {
       quantity_after: newQty,
       notes: adjustNotes || null,
     });
+
     toast.success(t.admin.common.success);
     setAdjustModal(null);
     setAdjustQty(1);
@@ -376,7 +462,9 @@ export function InventoryManager() {
       item.sku.toLowerCase().includes(q) ||
       item.product?.name_en?.toLowerCase().includes(q) ||
       item.product?.name_ar?.includes(q) ||
-      item.product?.name_tr?.toLowerCase().includes(q)
+      item.product?.name_tr?.toLowerCase().includes(q) ||
+      // ✅ بحث بالمقاس كمان
+      (item.size_label?.toLowerCase().includes(q) ?? false)
     );
   });
 
@@ -405,11 +493,7 @@ export function InventoryManager() {
             <QrCode className="h-4 w-4" />
             {inv.scanQR}
           </Button>
-          <Button
-            onClick={syncInventory}
-            variant="outline"
-            className="gap-2"
-          >
+          <Button onClick={syncInventory} variant="outline" className="gap-2">
             <RefreshCw className="h-4 w-4" />
             {inv.syncProducts}
           </Button>
@@ -419,41 +503,50 @@ export function InventoryManager() {
       {/* Quick Scan Section */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-           <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-1">
-              <Button
-                variant={scannerMode === "add" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setScannerMode("add")}
-                className={cn("h-8 gap-1 text-[10px] uppercase tracking-widest", scannerMode === "add" && "bg-green-500 hover:bg-green-600")}
-              >
-                <Plus className="h-3 w-3" /> {inv.add}
-              </Button>
-              <Button
-                variant={scannerMode === "remove" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setScannerMode("remove")}
-                className={cn("h-8 gap-1 text-[10px] uppercase tracking-widest", scannerMode === "remove" && "bg-red-500 hover:bg-red-600")}
-              >
-                <Minus className="h-3 w-3" /> {inv.remove}
-              </Button>
-           </div>
-           <div className="relative flex-1">
-             <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             <Input
-                placeholder="Scan QR or type SKU..."
-                className="pl-10 h-10 bg-background border-border"
-                value={scannerInput}
-                onChange={(e) => setScannerInput(e.target.value)}
-                onKeyDown={(e) => {
-                   if (e.key === "Enter") {
-                     handleScannerSubmit(scannerInput, scannerMode);
-                   }
-                }}
-             />
-           </div>
-           <Button onClick={() => handleScannerSubmit(scannerInput, scannerMode)} className="h-10 gap-2">
-             <RefreshCw className="h-4 w-4" /> {inv.findProduct}
-           </Button>
+          <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-1">
+            <Button
+              variant={scannerMode === "add" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setScannerMode("add")}
+              className={cn(
+                "h-8 gap-1 text-[10px] uppercase tracking-widest",
+                scannerMode === "add" && "bg-green-500 hover:bg-green-600",
+              )}
+            >
+              <Plus className="h-3 w-3" /> {inv.add}
+            </Button>
+            <Button
+              variant={scannerMode === "remove" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setScannerMode("remove")}
+              className={cn(
+                "h-8 gap-1 text-[10px] uppercase tracking-widest",
+                scannerMode === "remove" && "bg-red-500 hover:bg-red-600",
+              )}
+            >
+              <Minus className="h-3 w-3" /> {inv.remove}
+            </Button>
+          </div>
+          <div className="relative flex-1">
+            <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Scan QR or type SKU..."
+              className="pl-10 h-10 bg-background border-border"
+              value={scannerInput}
+              onChange={(e) => setScannerInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleScannerSubmit(scannerInput, scannerMode);
+                }
+              }}
+            />
+          </div>
+          <Button
+            onClick={() => handleScannerSubmit(scannerInput, scannerMode)}
+            className="h-10 gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> {inv.findProduct}
+          </Button>
         </CardContent>
       </Card>
 
@@ -546,8 +639,10 @@ export function InventoryManager() {
               <thead className="text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border bg-muted/30">
                 <tr>
                   <th className="px-6 py-4 font-medium">{inv.product}</th>
-                  <th className="px-6 py-4 font-medium">{inv.sku}</th>
                   <th className="px-6 py-4 font-medium">{inv.variant}</th>
+                  {/* ✅ Column جديد للمقاس */}
+                  <th className="px-6 py-4 font-medium">Size</th>
+                  <th className="px-6 py-4 font-medium">{inv.sku}</th>
                   <th className="px-6 py-4 font-medium">{inv.quantity}</th>
                   <th className="px-6 py-4 font-medium">{inv.status}</th>
                   <th className="px-6 py-4 font-medium text-right">
@@ -559,7 +654,7 @@ export function InventoryManager() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-6 py-12 text-center text-muted-foreground"
                     >
                       {inv.loading}
@@ -567,7 +662,7 @@ export function InventoryManager() {
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="px-6 py-12 text-center">
                       <p className="text-muted-foreground mb-3">
                         {inv.noRecords}
                       </p>
@@ -587,6 +682,7 @@ export function InventoryManager() {
                       key={item.id}
                       className="hover:bg-muted/20 transition-colors group"
                     >
+                      {/* Product */}
                       <td className="px-6 py-4">
                         <p className="font-bold text-foreground">
                           {getProductName(item)}
@@ -595,16 +691,13 @@ export function InventoryManager() {
                           {item.product?.sku}
                         </p>
                       </td>
-                      <td className="px-6 py-4">
-                        <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-primary border border-primary/20">
-                          {item.sku}
-                        </code>
-                      </td>
+
+                      {/* Color Variant */}
                       <td className="px-6 py-4">
                         {item.color_variant ? (
                           <div className="flex items-center gap-2">
                             <div
-                              className="h-4 w-4 rounded-full border border-border"
+                              className="h-4 w-4 rounded-full border border-border shrink-0"
                               style={{
                                 backgroundColor:
                                   item.color_variant.hex_color || "#000",
@@ -620,6 +713,28 @@ export function InventoryManager() {
                           </span>
                         )}
                       </td>
+
+                      {/* ✅ Size */}
+                      <td className="px-6 py-4">
+                        {item.size_label ? (
+                          <span className="text-xs font-bold bg-muted px-2 py-0.5 rounded border border-border text-foreground">
+                            {item.size_label}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </td>
+
+                      {/* SKU */}
+                      <td className="px-6 py-4">
+                        <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-primary border border-primary/20">
+                          {item.sku}
+                        </code>
+                      </td>
+
+                      {/* Quantity */}
                       <td className="px-6 py-4">
                         <span
                           className={cn(
@@ -634,9 +749,13 @@ export function InventoryManager() {
                           {item.quantity}
                         </span>
                       </td>
+
+                      {/* Status */}
                       <td className="px-6 py-4">
                         <StatusBadge status={item.status} t={t} />
                       </td>
+
+                      {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
@@ -769,7 +888,7 @@ export function InventoryManager() {
                         {log.notes || "—"}
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-xs">
-                        {new Date(log.created_at).toLocaleString()}
+                        {new Date(log.created_at).toLocaleString("en-US")}
                       </td>
                     </tr>
                   ))
@@ -801,7 +920,29 @@ export function InventoryManager() {
                 <p className="font-bold text-foreground">
                   {getProductName(adjustModal)}
                 </p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+                {/* ✅ عرض اللون والمقاس في الـ modal */}
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                  {adjustModal.color_variant && (
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="h-3 w-3 rounded-full border border-border"
+                        style={{
+                          backgroundColor:
+                            adjustModal.color_variant.hex_color || "#000",
+                        }}
+                      />
+                      <span className="text-[10px] text-muted-foreground">
+                        {adjustModal.color_variant.name_en}
+                      </span>
+                    </div>
+                  )}
+                  {adjustModal.size_label && (
+                    <span className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded border border-border text-foreground">
+                      Size {adjustModal.size_label}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
                   SKU: {adjustModal.sku} • {inv.currentQty}:{" "}
                   {adjustModal.quantity}
                 </p>
@@ -904,7 +1045,7 @@ export function InventoryManager() {
         </DialogContent>
       </Dialog>
 
-      {/* QR Code Modal (View/Download) */}
+      {/* QR Code Modal */}
       <Dialog open={!!qrModal} onOpenChange={() => setQrModal(null)}>
         <DialogContent
           className="bg-card border-border max-w-sm"
@@ -922,11 +1063,35 @@ export function InventoryManager() {
                   <img src={qrDataUrl} alt="QR Code" className="w-48 h-48" />
                 )}
               </div>
-              <div className="text-center">
+              <div className="text-center space-y-1">
                 <p className="font-bold text-foreground">
                   {getProductName(qrModal)}
                 </p>
-                <code className="text-[11px] text-primary">{qrModal.sku}</code>
+                {/* ✅ عرض اللون والمقاس في QR modal */}
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  {qrModal.color_variant && (
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="h-3 w-3 rounded-full border border-border"
+                        style={{
+                          backgroundColor:
+                            qrModal.color_variant.hex_color || "#000",
+                        }}
+                      />
+                      <span className="text-[10px] text-muted-foreground">
+                        {qrModal.color_variant.name_en}
+                      </span>
+                    </div>
+                  )}
+                  {qrModal.size_label && (
+                    <span className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded border border-border">
+                      Size {qrModal.size_label}
+                    </span>
+                  )}
+                </div>
+                <code className="text-[11px] text-primary block">
+                  {qrModal.sku}
+                </code>
               </div>
               <Button
                 onClick={downloadQR}
@@ -941,67 +1106,76 @@ export function InventoryManager() {
       </Dialog>
 
       {/* External Scanner Focus Modal */}
-      <Dialog 
-        open={scanModalOpen} 
-        onOpenChange={setScanModalOpen}
-      >
-        <DialogContent className="bg-card border-border max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+      <Dialog open={scanModalOpen} onOpenChange={setScanModalOpen}>
+        <DialogContent
+          className="bg-card border-border max-w-md"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-primary">
               {inv.scanQRCode}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6 pt-4">
-             <div className="flex justify-center gap-4">
-                <Button
-                  variant={scannerMode === "add" ? "default" : "outline"}
-                  onClick={() => setScannerMode("add")}
-                  className={cn("flex-1 h-12 gap-2", scannerMode === "add" && "bg-green-500 hover:bg-green-600 border-none")}
-                >
-                  <Plus className="h-5 w-5" /> {inv.addStock}
-                </Button>
-                <Button
-                  variant={scannerMode === "remove" ? "default" : "outline"}
-                  onClick={() => setScannerMode("remove")}
-                  className={cn("flex-1 h-12 gap-2", scannerMode === "remove" && "bg-red-500 hover:bg-red-600 border-none")}
-                >
-                  <Minus className="h-5 w-5" /> {inv.removeStock}
-                </Button>
-             </div>
+            <div className="flex justify-center gap-4">
+              <Button
+                variant={scannerMode === "add" ? "default" : "outline"}
+                onClick={() => setScannerMode("add")}
+                className={cn(
+                  "flex-1 h-12 gap-2",
+                  scannerMode === "add" &&
+                    "bg-green-500 hover:bg-green-600 border-none",
+                )}
+              >
+                <Plus className="h-5 w-5" /> {inv.addStock}
+              </Button>
+              <Button
+                variant={scannerMode === "remove" ? "default" : "outline"}
+                onClick={() => setScannerMode("remove")}
+                className={cn(
+                  "flex-1 h-12 gap-2",
+                  scannerMode === "remove" &&
+                    "bg-red-500 hover:bg-red-600 border-none",
+                )}
+              >
+                <Minus className="h-5 w-5" /> {inv.removeStock}
+              </Button>
+            </div>
 
-             <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-                  {inv.manual} / {inv.camera}
-                </Label>
-                <div className="relative">
-                   <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                   <Input
-                      autoFocus
-                      ref={scannerInputRef}
-                      placeholder="Waiting for scanner input..."
-                      className="pl-10 h-12 text-lg font-mono bg-background border-border"
-                      value={scannerInput}
-                      onChange={(e) => setScannerInput(e.target.value)}
-                      onKeyDown={(e) => {
-                         if (e.key === "Enter") {
-                           handleScannerSubmit(scannerInput, scannerMode);
-                         }
-                      }}
-                   />
-                </div>
-                <p className="text-[10px] text-center text-muted-foreground italic">
-                  Connect your scanner and scan a QR code. Input will be processed automatically.
-                </p>
-             </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                {inv.manual} / {inv.camera}
+              </Label>
+              <div className="relative">
+                <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  autoFocus
+                  ref={scannerInputRef}
+                  placeholder="Waiting for scanner input..."
+                  className="pl-10 h-12 text-lg font-mono bg-background border-border"
+                  value={scannerInput}
+                  onChange={(e) => setScannerInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleScannerSubmit(scannerInput, scannerMode);
+                    }
+                  }}
+                />
+              </div>
+              <p className="text-[10px] text-center text-muted-foreground italic">
+                Connect your scanner and scan a QR code. Input will be processed
+                automatically.
+              </p>
+            </div>
 
-             <Button 
-                variant="ghost" 
-                className="w-full text-muted-foreground"
-                onClick={() => setScanModalOpen(false)}
-             >
-               {inv.cancel}
-             </Button>
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground"
+              onClick={() => setScanModalOpen(false)}
+            >
+              {inv.cancel}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
