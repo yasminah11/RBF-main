@@ -1,8 +1,7 @@
 import { useCart, cartTotal } from "@/store/cart";
 import { useI18n } from "@/i18n/I18nContext";
 import { cn } from "@/lib/utils";
-
-const WHATSAPP_NUMBER = "201000000000";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface WhatsAppCheckoutProps {
   className?: string;
@@ -12,7 +11,10 @@ interface WhatsAppCheckoutProps {
 export function WhatsAppCheckout({ className, onClick }: WhatsAppCheckoutProps) {
   const items = useCart();
   const { t } = useI18n();
+  const { data: contact } = useSiteSettings("contact");
   const isEmpty = items.length === 0;
+
+  const whatsappNumber = (contact?.whatsapp || "201000000000").replace(/\+/g, "");
 
   const sendToWhatsApp = () => {
     if (isEmpty) return;
@@ -32,7 +34,7 @@ export function WhatsAppCheckout({ className, onClick }: WhatsAppCheckoutProps) 
     message += "أرجو التواصل لتأكيد الطلب.";
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
     window.open(whatsappUrl, "_blank");
     if (onClick) onClick();
