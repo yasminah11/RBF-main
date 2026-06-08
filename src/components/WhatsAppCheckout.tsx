@@ -10,7 +10,7 @@ interface WhatsAppCheckoutProps {
 
 export function WhatsAppCheckout({ className, onClick }: WhatsAppCheckoutProps) {
   const items = useCart();
-  const { t } = useI18n();
+  const { t, formatPrice, locale } = useI18n();
   const { data: contact } = useSiteSettings("contact");
   const isEmpty = items.length === 0;
 
@@ -21,17 +21,32 @@ export function WhatsAppCheckout({ className, onClick }: WhatsAppCheckoutProps) 
 
     const totalPrice = cartTotal(items);
 
-    let message = "مرحباً، أود الاستفسار عن طلبي:\n\n";
-    message += "🛍️ طلبي:\n";
-
-    items.forEach((item) => {
-      const variantInfo = item.variantLabel || "";
-      const subtotal = item.price * item.quantity;
-      message += `- ${item.name} (${variantInfo}) × ${item.quantity} = ${subtotal} جنيه\n`;
-    });
-
-    message += `\n💰 الإجمالي: ${totalPrice} جنيه\n\n`;
-    message += "أرجو التواصل لتأكيد الطلب.";
+    let message = "";
+    if (locale === "ar") {
+      message = "مرحباً، أود الاستفسار عن طلبي:\n\n🛍️ طلبي:\n";
+      items.forEach((item) => {
+        const variantInfo = item.variantLabel || "";
+        const subtotal = item.price * item.quantity;
+        message += `- ${item.name} (${variantInfo}) × ${item.quantity} = ${formatPrice(subtotal)}\n`;
+      });
+      message += `\n💰 الإجمالي: ${formatPrice(totalPrice)}\n\nأرجو التواصل لتأكيد الطلب.`;
+    } else if (locale === "tr") {
+      message = "Merhaba, siparişim hakkında bilgi almak istiyorum:\n\n🛍️ Siparişim:\n";
+      items.forEach((item) => {
+        const variantInfo = item.variantLabel || "";
+        const subtotal = item.price * item.quantity;
+        message += `- ${item.name} (${variantInfo}) × ${item.quantity} = ${formatPrice(subtotal)}\n`;
+      });
+      message += `\n💰 Toplam: ${formatPrice(totalPrice)}\n\nLütfen siparişimi onaylamak için iletişime geçin.`;
+    } else {
+      message = "Hello, I'd like to inquire about my order:\n\n🛍️ My Order:\n";
+      items.forEach((item) => {
+        const variantInfo = item.variantLabel || "";
+        const subtotal = item.price * item.quantity;
+        message += `- ${item.name} (${variantInfo}) × ${item.quantity} = ${formatPrice(subtotal)}\n`;
+      });
+      message += `\n💰 Total: ${formatPrice(totalPrice)}\n\nPlease contact me to confirm the order.`;
+    }
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;

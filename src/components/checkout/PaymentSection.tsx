@@ -87,7 +87,7 @@ export function PaymentSection({
   clientInfo,
   isValid,
 }: PaymentSectionProps) {
-  const { t, locale } = useI18n();
+  const { t, locale, formatPrice } = useI18n();
   const navigate = useNavigate();
   const [method, setMethod] = useState<PaymentMethod>("iyzico");
   const [loading, setLoading] = useState(false);
@@ -136,21 +136,21 @@ export function PaymentSection({
       if (locale === "ar") {
         message = `مرحباً، أود تأكيد طلبي:\n\n🔖 رقم الطلب: ${order.order_number}\n\n🛍️ طلبي:\n`;
         items.forEach((item) => {
-          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${item.price * item.quantity} جنيه\n`;
+          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${formatPrice(item.price * item.quantity)}\n`;
         });
-        message += `\n💰 الإجمالي: ${totalAmount} جنيه\n\n📦 العنوان: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
+        message += `\n💰 الإجمالي: ${formatPrice(totalAmount)}\n\n📦 العنوان: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
       } else if (locale === "tr") {
         message = `Merhaba, siparişimi onaylamak istiyorum:\n\n🔖 Sipariş No: ${order.order_number}\n\n🛍️ Siparişim:\n`;
         items.forEach((item) => {
-          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${item.price * item.quantity}\n`;
+          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${formatPrice(item.price * item.quantity)}\n`;
         });
-        message += `\n💰 Toplam: ${totalAmount}\n\n📦 Adres: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
+        message += `\n💰 Toplam: ${formatPrice(totalAmount)}\n\n📦 Adres: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
       } else {
         message = `Hello, I'd like to confirm my order:\n\n🔖 Order #: ${order.order_number}\n\n🛍️ My Order:\n`;
         items.forEach((item) => {
-          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${item.price * item.quantity}\n`;
+          message += `- ${item.name} (${item.variantLabel || ""}) × ${item.quantity} = ${formatPrice(item.price * item.quantity)}\n`;
         });
-        message += `\n💰 Total: ${totalAmount}\n\n📦 Address: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
+        message += `\n💰 Total: ${formatPrice(totalAmount)}\n\n📦 Address: ${clientInfo.address}, ${clientInfo.district}, ${clientInfo.city}`;
       }
 
       cart.clear();
@@ -177,7 +177,7 @@ export function PaymentSection({
       const response = await createPaymentSession({
         items,
         totalAmount,
-        currency: "TRY",
+        currency: "USD",
         clientInfo,
       });
 

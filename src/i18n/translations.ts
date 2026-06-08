@@ -92,7 +92,7 @@ export const dict = {
       cod: "Cash on Delivery",
       payAtDoor: "Pay at the Door",
       payAtDoorNote: "Pay with cash or card upon delivery.",
-      codFee: "+ ₺25.00 handling fee applies",
+      codFee: "+ $1.00 handling fee applies",
       orderSummary: "Order Summary",
       shipping: "Shipping",
       grandTotal: "Grand Total",

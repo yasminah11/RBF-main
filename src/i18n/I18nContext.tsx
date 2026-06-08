@@ -33,16 +33,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     t: dict[locale],
     dir,
     formatPrice: (n: number) => {
-      // Force Latin numerals even in Arabic locale
-      const formatLocale = locale === "ar" ? "ar-SA-u-nu-latn" : locale === "tr" ? "tr-TR" : "en-US";
+      // Force English format (dot for decimals, comma for thousands) and USD currency
+      const formatLocale = "en-US";
       const fmt = new Intl.NumberFormat(formatLocale, {
         style: "currency",
-        currency: "TRY",
-        maximumFractionDigits: 0,
+        currency: "USD",
+        maximumFractionDigits: 2, // Dollars usually show cents
       });
       return fmt.format(n);
     },
     formatNumber: (n: number) => {
+      // Force English format
       return new Intl.NumberFormat("en-US").format(n);
     },
   }), [locale, dir]);
